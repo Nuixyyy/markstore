@@ -16,7 +16,7 @@ const MY_FIREBASE_CONFIG = {
 
 // Telegram Bot API Configuration
 const TELEGRAM_BOT_TOKEN = '8205867201:AAHJ89--5boZu2qOZ4iLKzt6FCAd8MSOgnM';
-const TELEGRAM_CHAT_ID = '1526903621';
+const TELEGRAM_CHAT_ID = '7348531151';
 
 // Developer UID - معرف المطور الرئيسي من Firebase
 const MAIN_DEVELOPER_UID = 'NrXWrgBSsGfd9x8iTj8rvAQmoxI3';
