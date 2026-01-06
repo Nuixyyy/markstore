@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/telegram-webhook.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/webhook",
+      "destination": "/api/telegram-webhook"
+    }
+  ]
+}
+

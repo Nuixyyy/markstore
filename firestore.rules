@@ -1,0 +1,157 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // دالة للتحقق من أن المستخدم مسجل
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // دالة للتحقق من أن المستخدم هو صاحب البيانات
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // دالة للتحقق من أن المستخدم مطور
+    function isDeveloper() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/settings/developers) &&
+             request.auth.uid in get(/databases/$(database)/documents/settings/developers).data.uids;
+    }
+    
+    // دالة للتحقق من أن المستخدم هو المطور الرئيسي
+    function isMainDeveloper() {
+      return isSignedIn() && request.auth.uid == '85CDdvdZjpSDhcoMsbkwgqIGkxm1';
+    }
+    
+    // ============================================
+    // قواعد المنتجات (products)
+    // ============================================
+    match /products/{productId} {
+      // القراءة متاحة للجميع
+      allow read: if true;
+      
+      // الكتابة والتحديث والحذف للمطورين فقط
+      allow create: if isDeveloper();
+      allow update: if isDeveloper();
+      allow delete: if isDeveloper();
+    }
+    
+    // ============================================
+    // قواعد الأقسام (categories)
+    // ============================================
+    match /categories/{categoryId} {
+      // القراءة متاحة للجميع
+      allow read: if true;
+      
+      // الكتابة والتحديث والحذف للمطورين فقط
+      allow create: if isDeveloper();
+      allow update: if isDeveloper();
+      allow delete: if isDeveloper();
+    }
+    
+    // ============================================
+    // قواعد التقييمات (reviews)
+    // ============================================
+    match /reviews/{reviewId} {
+      // القراءة متاحة للجميع
+      allow read: if true;
+      
+      // الكتابة للمستخدمين المسجلين فقط
+      allow create: if isSignedIn() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // التحديث للمطورين أو صاحب التقييم
+      allow update: if isDeveloper() || 
+                       (isSignedIn() && 
+                        resource.data.userId == request.auth.uid);
+      
+      // الحذف للمطورين أو صاحب التقييم
+      allow delete: if isDeveloper() || 
+                       (isSignedIn() && 
+                        resource.data.userId == request.auth.uid);
+    }
+    
+    // ============================================
+    // قواعد المنتجات المميزة (featuredProducts)
+    // ============================================
+    match /featuredProducts/{featuredId} {
+      // القراءة متاحة للجميع
+      allow read: if true;
+      
+      // الكتابة والتحديث والحذف للمطورين فقط
+      allow create: if isDeveloper();
+      allow update: if isDeveloper();
+      allow delete: if isDeveloper();
+    }
+    
+    // ============================================
+    // قواعد المستخدمين (users)
+    // ============================================
+    match /users/{userId} {
+      // الملف الشخصي للمستخدم
+      match /userProfile/{profileId} {
+        // القراءة: المستخدم نفسه أو المطورين
+        allow read: if isOwner(userId) || isDeveloper();
+        
+        // الكتابة: المستخدم نفسه فقط (عند إنشاء/تحديث الملف الشخصي)
+        allow create: if isOwner(userId) && 
+                         request.resource.data.phoneNumber is string &&
+                         request.resource.data.fullName is string;
+        
+        allow update: if isOwner(userId);
+        
+        // الحذف: المستخدم نفسه أو المطورين
+        allow delete: if isOwner(userId) || isDeveloper();
+      }
+      
+      // سلة التسوق (cart)
+      match /cart/{cartItemId} {
+        // القراءة والكتابة: المستخدم نفسه فقط
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // الطلبات (orders)
+      match /orders/{orderId} {
+        // القراءة: المستخدم نفسه أو المطورين
+        allow read: if isOwner(userId) || isDeveloper();
+        
+        // الكتابة: المستخدم نفسه فقط (عند إنشاء طلب جديد)
+        allow create: if isOwner(userId) && 
+                         request.resource.data.userId == request.auth.uid &&
+                         request.resource.data.status == 'received';
+        
+        // التحديث: المطورين فقط (لتحديث حالة الطلب)
+        // ملاحظة: webhook server يستخدم Firebase Admin SDK الذي يتجاوز القواعد
+        allow update: if isDeveloper() && 
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+        
+        // الحذف: المطورين فقط
+        allow delete: if isDeveloper();
+      }
+    }
+    
+    // ============================================
+    // قواعد الإعدادات (settings)
+    // ============================================
+    match /settings/{settingId} {
+      // إعدادات المطورين
+      match /developers {
+        // القراءة: المستخدمين المسجلين (للتحقق من حالة المطور)
+        // لكن البيانات الحساسة محمية - فقط قائمة UIDs
+        allow read: if isSignedIn();
+        
+        // الكتابة والتحديث: المطور الرئيسي فقط
+        allow create: if isMainDeveloper();
+        allow update: if isMainDeveloper();
+        
+        // الحذف: غير مسموح (لحماية قائمة المطورين)
+        allow delete: if false;
+      }
+    }
+  }
+}
+

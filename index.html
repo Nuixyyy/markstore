@@ -115,7 +115,7 @@
 
         <!-- Products Section -->
         <section id="products" class="mb-8">
-            <div class="flex justify-center mb-8">
+            <div class="flex justify-center mb-8 sticky-search-container">
                 <div class="relative max-w-md w-full">
                     <input type="text" id="main-search-input" placeholder="البحث عن المنتجات..." class="custom-input rounded-lg px-4 py-3 w-full focus:outline-none">
                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,6 +186,12 @@
                     <button data-category-id="all" class="category-filter-btn block w-full text-right px-4 py-2 text-white hover:bg-purple-600">جميع المنتجات</button>
                 </div>
             </div>
+            <button id="bottom-orders-btn" class="flex flex-col items-center text-white hover:text-purple-300 transition duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                <span class="text-xs mt-1">متابعة</span>
+            </button>
             <div class="w-px h-8 bg-purple-600 mx-2"></div>
             <button id="bottom-reviews-btn" class="flex flex-col items-center text-white hover:text-purple-300 transition duration-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,25 +232,46 @@
     <div id="login-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="rounded-lg p-6 w-full max-w-md mx-4" style="background-color: #1a012a;">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white">تسجيل الدخول</h3>
+                <h3 id="login-modal-title" class="text-xl font-bold text-white">تسجيل الدخول / إنشاء حساب</h3>
                 <button class="modal-close-btn text-white hover:text-purple-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <form id="login-form">
-                <div class="mb-4">
-                    <label for="full-name" class="block text-sm font-medium text-white mb-2">الاسم الكامل</label>
-                    <input type="text" id="full-name" required class="custom-input w-full px-3 py-2 rounded-lg focus:outline-none">
+            
+            <!-- اختيار النوع (يظهر أولاً) -->
+            <div id="auth-type-selection" class="space-y-3">
+                <button id="select-login-btn" class="w-full bg-gradient-to-l from-blue-500 to-purple-600 text-white py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300 font-semibold text-lg">
+                    تسجيل الدخول
+                </button>
+                <button id="select-register-btn" class="w-full bg-gradient-to-l from-blue-500 to-purple-600 text-white py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300 font-semibold text-lg">
+                    إنشاء حساب جديد
+                </button>
+            </div>
+            
+            <!-- نموذج الإدخال (يظهر بعد الاختيار) -->
+            <div id="auth-form-container" class="hidden">
+                <div class="flex gap-2 mb-4">
+                    <button id="login-tab-btn" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">تسجيل دخول</button>
+                    <button id="register-tab-btn" class="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-300">إنشاء حساب</button>
                 </div>
-                <div class="mb-4">
-                    <label for="phone-number" class="block text-sm font-medium text-white mb-2">رقم الهاتف (بعد 964)</label>
-                    <input type="tel" id="phone-number" required class="custom-input w-full px-3 py-2 rounded-lg focus:outline-none" placeholder="7XXXXXXXXXX">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">تسجيل الدخول</button>
-                <div id="login-message" class="mt-4 text-center"></div>
-            </form>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="full-name" class="block text-sm font-medium text-white mb-2">الاسم الكامل</label>
+                        <input type="text" id="full-name" required class="custom-input w-full px-3 py-2 rounded-lg focus:outline-none" placeholder="أدخل اسمك الكامل">
+                        <div id="full-name-error" class="text-red-400 text-xs mt-1 hidden"></div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="phone-number" class="block text-sm font-medium text-white mb-2">رقم الهاتف (بعد 964)</label>
+                        <input type="tel" id="phone-number" required class="custom-input w-full px-3 py-2 rounded-lg focus:outline-none" placeholder="7XXXXXXXXXX" dir="ltr" inputmode="numeric">
+                        <div id="phone-number-error" class="text-red-400 text-xs mt-1 hidden"></div>
+                        <p class="text-purple-300 text-xs mt-1">يمكنك إدخال الأرقام بالعربية أو الإنجليزية</p>
+                    </div>
+                    <button type="submit" id="login-submit-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">تسجيل الدخول</button>
+                    <div id="login-message" class="mt-4 text-center"></div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -582,6 +609,16 @@
                     </div>
                 </div>
                 <div class="mb-4">
+                    <label class="flex items-center text-white mb-2">
+                        <input type="checkbox" id="edit-product-has-discount" class="ml-2 w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                        <span>إضافة خصم على المنتج</span>
+                    </label>
+                    <div id="edit-product-discount-container" class="hidden mt-2">
+                        <label for="edit-product-discount-price" class="block text-sm font-medium text-white mb-2">السعر بعد الخصم (د.ع)</label>
+                        <input type="number" id="edit-product-discount-price" class="w-full px-3 py-2 rounded-lg focus:outline-none font-medium" style="background-color: rgba(255, 255, 255, 0.95); border: 2px solid #6b46c1; color: #1a012a;">
+                    </div>
+                </div>
+                <div class="mb-4">
                     <label for="edit-product-description" class="block text-sm font-medium text-white mb-2">وصف المنتج</label>
                     <textarea id="edit-product-description" rows="3" required class="w-full px-3 py-2 rounded-lg focus:outline-none font-medium" style="background-color: rgba(255, 255, 255, 0.95); border: 2px solid #6b46c1; color: #1a012a;"></textarea>
                 </div>
@@ -708,6 +745,23 @@
 
             <div class="mt-6 flex justify-end">
                 <button id="save-featured-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Tracking Modal -->
+    <div id="orders-tracking-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="rounded-lg p-6 w-full max-w-2xl mx-4 max-h-96 overflow-y-auto" style="background-color: #1a012a;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">متابعة الطلبات</h3>
+                <button class="modal-close-btn text-white hover:text-purple-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="orders-list" class="space-y-4">
+                <p class="text-center text-purple-300">لا توجد طلبات حالياً</p>
             </div>
         </div>
     </div>

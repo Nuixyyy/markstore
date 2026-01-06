@@ -1,0 +1,16 @@
+{
+  "name": "markstore",
+  "version": "1.0.0",
+  "description": "Mark Store - E-commerce website with Telegram integration",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

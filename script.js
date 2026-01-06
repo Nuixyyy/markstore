@@ -16,10 +16,10 @@ const MY_FIREBASE_CONFIG = {
 
 // Telegram Bot API Configuration
 const TELEGRAM_BOT_TOKEN = '8205867201:AAHJ89--5boZu2qOZ4iLKzt6FCAd8MSOgnM';
-const TELEGRAM_CHAT_ID = '1526903621';
+const TELEGRAM_CHAT_ID = '7348531151';
 
 // Developer UID - معرف المطور الرئيسي من Firebase
-const MAIN_DEVELOPER_UID = '6BxOu5NtQAhOxv3WsllnQ6bgi5q1';
+const MAIN_DEVELOPER_UID = '4XrVKOmbbaaqUDZaqtw8w0ctIoU2';
 
 // قائمة معرفات المطورين
 let developerUIDs = [MAIN_DEVELOPER_UID];
@@ -203,6 +203,10 @@ const initializeFirebase = async () => {
 };
 
 // Real-time listeners
+// متغيرات لتخزين unsubscribe functions
+let cartUnsubscribe = null;
+let ordersUnsubscribe = null;
+
 const setupRealtimeListeners = () => {
     if (!db || !userId) {
         console.warn("Firestore or userId not available for setting up listeners.");
@@ -210,6 +214,16 @@ const setupRealtimeListeners = () => {
     }
 
     console.log("Setting up real-time listeners for products, categories, reviews, and cart...");
+
+    // إيقاف الـ listeners القديمة إن وجدت
+    if (cartUnsubscribe) {
+        cartUnsubscribe();
+        cartUnsubscribe = null;
+    }
+    if (ordersUnsubscribe) {
+        ordersUnsubscribe();
+        ordersUnsubscribe = null;
+    }
 
     const productsColRef = collection(db, `products`);
     onSnapshot(productsColRef, (snapshot) => {
@@ -264,7 +278,7 @@ const setupRealtimeListeners = () => {
     });
 
     const cartColRef = collection(db, `users/${userId}/cart`);
-    onSnapshot(cartColRef, (snapshot) => {
+    cartUnsubscribe = onSnapshot(cartColRef, (snapshot) => {
         currentCart = [];
         snapshot.forEach((doc) => {
             currentCart.push({ id: doc.id, ...doc.data() });
@@ -349,6 +363,27 @@ const fetchUserProfile = async (uid) => {
 
 const fetchAdminStatus = async () => {
     try {
+        // التحقق من أن المستخدم مسجل دخول أولاً
+        if (!userId || !auth || !auth.currentUser) {
+            console.log("User not signed in, skipping admin status check.");
+            isAdmin = false;
+            if (uiElements.developerButtons) uiElements.developerButtons.classList.add('hidden');
+            if (uiElements.developerStatus) uiElements.developerStatus.classList.add('hidden');
+            return;
+        }
+        
+        // التحقق أولاً من المطور الرئيسي مباشرة
+        if (userId === MAIN_DEVELOPER_UID) {
+            developerUIDs = [MAIN_DEVELOPER_UID];
+            isAdmin = true;
+            if (uiElements.developerButtons) uiElements.developerButtons.classList.remove('hidden');
+            if (uiElements.developerStatus) uiElements.developerStatus.classList.remove('hidden');
+            const manageDevelopersBtn = document.getElementById('manage-developers-btn');
+            if (manageDevelopersBtn) manageDevelopersBtn.classList.remove('hidden');
+            console.log("Current user is main developer.");
+            return;
+        }
+        
         // جلب قائمة المطورين من Firestore
         const developersDocRef = doc(db, `settings`, 'developers');
         const developersDocSnap = await getDoc(developersDocRef);
@@ -605,19 +640,69 @@ const saveFeaturedProducts = async () => {
     }
 };
 
-// دالة البحث عن مستخدم موجود بنفس المعلومات (محسنة لتجنب مشاكل الأذونات)
+// دالة البحث عن مستخدم موجود بنفس المعلومات
 const findExistingUser = async (fullName, phoneNumber) => {
     try {
         console.log("Searching for existing user with:", { fullName, phoneNumber });
-
-        // بما أن Firebase لا يسمح بالوصول لجميع المستخدمين، سنتجاهل هذه الميزة مؤقتاً
-        // وننشئ مستخدم جديد دائماً للتجنب مشاكل الأذونات
-        console.log("Skipping user search due to permission restrictions");
+        
+        // البحث في جميع المستخدمين
+        const usersColRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersColRef);
+        
+        for (const userDoc of usersSnapshot.docs) {
+            try {
+                const userProfileRef = doc(db, `users/${userDoc.id}/userProfile`, userDoc.id);
+                const userProfileSnap = await getDoc(userProfileRef);
+                
+                if (userProfileSnap.exists()) {
+                    const userData = userProfileSnap.data();
+                    // التحقق من تطابق الاسم ورقم الهاتف
+                    if (userData.fullName === fullName && userData.phoneNumber === phoneNumber) {
+                        console.log("Found existing user:", userDoc.id);
+                        return {
+                            userId: userDoc.id,
+                            data: userData
+                        };
+                    }
+                }
+            } catch (profileError) {
+                continue;
+            }
+        }
+        
         return null;
     } catch (error) {
         console.error("Error searching for existing user:", error);
-        // في حالة فشل البحث، نعيد null لإنشاء مستخدم جديد
         return null;
+    }
+};
+
+// دالة التحقق من وجود رقم هاتف مسجل
+const checkPhoneExists = async (phoneNumber) => {
+    try {
+        const usersColRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersColRef);
+        
+        for (const userDoc of usersSnapshot.docs) {
+            try {
+                const userProfileRef = doc(db, `users/${userDoc.id}/userProfile`, userDoc.id);
+                const userProfileSnap = await getDoc(userProfileRef);
+                
+                if (userProfileSnap.exists()) {
+                    const userData = userProfileSnap.data();
+                    if (userData.phoneNumber === phoneNumber) {
+                        return true;
+                    }
+                }
+            } catch (profileError) {
+                continue;
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error("Error checking phone:", error);
+        return false;
     }
 };
 
@@ -752,7 +837,9 @@ const displayProducts = (products) => {
         return dateB - dateA; // ترتيب تنازلي (الأحدث أولاً)
     });
     sortedProducts.forEach(product => {
-        const formattedPrice = Math.round(product.price).toLocaleString('en-US');
+        const displayPrice = product.discountPrice || product.price;
+        const formattedPrice = Math.round(displayPrice).toLocaleString('en-US');
+        const oldPriceHtml = product.discountPrice ? `<span class="product-price-old">${Math.round(product.price).toLocaleString('en-US')} د.ع</span>` : '';
         // استخدام الصورة الأولى من مجموعة الصور أو الصورة القديمة كـ fallback
         const mainImageUrl = (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl;
 
@@ -796,7 +883,10 @@ const displayProducts = (products) => {
                     <p class="text-purple-400 text-xs mt-1">اضغط على المنتج لمعرفة التفاصيل</p>
                     ${freeDeliveryText}
                     ${availabilityText}
-                    <p class="text-lg font-bold text-green-400 mt-2 text-center">${formattedPrice} د.ع</p>
+                    <p class="text-lg font-bold mt-2 text-center">
+                        <span class="product-price-new">${formattedPrice} د.ع</span>
+                        ${oldPriceHtml}
+                    </p>
                     ${buttonsSection}
                     ${isAdmin ? `
                     <div class="flex gap-2 mt-3">
@@ -977,7 +1067,10 @@ const openProductDetailPage = (product) => {
                         <div class="border rounded-lg p-3 cursor-pointer hover:shadow-md transition duration-300" onclick="openRelatedProduct('${relProduct.id}')">
                             <img src="${(relProduct.imageUrls && relProduct.imageUrls[0]) || relProduct.imageUrl}" alt="${relProduct.name}" class="w-full h-20 object-contain mb-2 bg-gray-50 rounded">
                             <h4 class="text-sm font-medium text-gray-800 truncate">${relProduct.name}</h4>
-                            <p class="text-sm font-bold text-green-600">${Math.round(relProduct.price).toLocaleString('en-US')} د.ع</p>
+                            <p class="text-sm font-bold text-green-600">
+                                <span>${Math.round(relProduct.discountPrice || relProduct.price).toLocaleString('en-US')} د.ع</span>
+                                ${relProduct.discountPrice ? `<span class="product-price-old text-xs">${Math.round(relProduct.price).toLocaleString('en-US')} د.ع</span>` : ''}
+                            </p>
                         </div>
                     `).join('')}
                 </div>
@@ -1033,7 +1126,12 @@ const openProductDetailPage = (product) => {
                         </div>
 
                         <!-- Price -->
-                        <p class="text-3xl font-bold text-green-600">${Math.round(product.price).toLocaleString('en-US')} د.ع</p>
+                        <div>
+                            <p class="text-3xl font-bold text-green-600">
+                                <span class="product-price-new">${Math.round(product.discountPrice || product.price).toLocaleString('en-US')} د.ع</span>
+                                ${product.discountPrice ? `<span class="product-price-old text-xl">${Math.round(product.price).toLocaleString('en-US')} د.ع</span>` : ''}
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Action Buttons -->
@@ -1678,6 +1776,23 @@ const openEditProductModal = (product) => {
     uiElements.editProductDescriptionInput.value = product.description;
     uiElements.editProductPriceInput.value = product.price;
     uiElements.editProductCategorySelect.value = product.category || '';
+    
+    // تعبئة حقول الخصم
+    const hasDiscountCheckbox = document.getElementById('edit-product-has-discount');
+    const discountContainer = document.getElementById('edit-product-discount-container');
+    const discountPriceInput = document.getElementById('edit-product-discount-price');
+    
+    if (hasDiscountCheckbox && discountContainer && discountPriceInput) {
+        if (product.discountPrice) {
+            hasDiscountCheckbox.checked = true;
+            discountContainer.classList.remove('hidden');
+            discountPriceInput.value = product.discountPrice;
+        } else {
+            hasDiscountCheckbox.checked = false;
+            discountContainer.classList.add('hidden');
+            discountPriceInput.value = '';
+        }
+    }
 
     // تعبئة حقل التوصيل المجاني
     const editFreeDeliveryCheckbox = document.getElementById('edit-product-free-delivery');
@@ -2052,6 +2167,186 @@ const setupEventListeners = () => {
         });
     }
 
+    // Login/Register mode tracking
+    let isLoginMode = true; // true for login, false for register
+    
+    // عناصر الواجهة
+    const authTypeSelection = document.getElementById('auth-type-selection');
+    const authFormContainer = document.getElementById('auth-form-container');
+    const selectLoginBtn = document.getElementById('select-login-btn');
+    const selectRegisterBtn = document.getElementById('select-register-btn');
+    const loginTabBtn = document.getElementById('login-tab-btn');
+    const registerTabBtn = document.getElementById('register-tab-btn');
+    const loginModalTitle = document.getElementById('login-modal-title');
+    const loginSubmitBtn = document.getElementById('login-submit-btn');
+    const fullNameInput = document.getElementById('full-name');
+    const phoneNumberInput = document.getElementById('phone-number');
+    const fullNameError = document.getElementById('full-name-error');
+    const phoneNumberError = document.getElementById('phone-number-error');
+    
+    // دالة لتحويل الأرقام العربية إلى إنجليزية
+    const convertArabicToEnglish = (str) => {
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        let result = str;
+        arabicNumbers.forEach((arabic, index) => {
+            result = result.replace(new RegExp(arabic, 'g'), englishNumbers[index]);
+        });
+        return result;
+    };
+    
+    // دالة للتحقق من صحة البيانات
+    const validateForm = () => {
+        let isValid = true;
+        
+        // إخفاء رسائل الخطأ السابقة
+        if (fullNameError) {
+            fullNameError.classList.add('hidden');
+            fullNameError.textContent = '';
+        }
+        if (phoneNumberError) {
+            phoneNumberError.classList.add('hidden');
+            phoneNumberError.textContent = '';
+        }
+        
+        // التحقق من الاسم
+        const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+        if (!fullName) {
+            if (fullNameError) {
+                fullNameError.textContent = 'الاسم الكامل مطلوب';
+                fullNameError.classList.remove('hidden');
+            }
+            isValid = false;
+        } else if (fullName.length < 3) {
+            if (fullNameError) {
+                fullNameError.textContent = 'الاسم يجب أن يكون 3 أحرف على الأقل';
+                fullNameError.classList.remove('hidden');
+            }
+            isValid = false;
+        } else if (!/^[\u0600-\u06FF\s]+$/.test(fullName)) {
+            if (fullNameError) {
+                fullNameError.textContent = 'الاسم يجب أن يحتوي على أحرف عربية فقط';
+                fullNameError.classList.remove('hidden');
+            }
+            isValid = false;
+        }
+        
+        // التحقق من رقم الهاتف
+        let phoneNumberDigits = phoneNumberInput ? phoneNumberInput.value.trim() : '';
+        if (!phoneNumberDigits) {
+            if (phoneNumberError) {
+                phoneNumberError.textContent = 'رقم الهاتف مطلوب';
+                phoneNumberError.classList.remove('hidden');
+            }
+            isValid = false;
+        } else {
+            // تحويل الأرقام العربية إلى إنجليزية
+            phoneNumberDigits = convertArabicToEnglish(phoneNumberDigits);
+            // إزالة أي أحرف غير رقمية
+            phoneNumberDigits = phoneNumberDigits.replace(/\D/g, '');
+            
+            if (phoneNumberDigits.length !== 11) {
+                if (phoneNumberError) {
+                    phoneNumberError.textContent = 'رقم الهاتف يجب أن يكون 11 رقمًا';
+                    phoneNumberError.classList.remove('hidden');
+                }
+                isValid = false;
+            } else if (!/^[0-9]{11}$/.test(phoneNumberDigits)) {
+                if (phoneNumberError) {
+                    phoneNumberError.textContent = 'رقم الهاتف غير صحيح';
+                    phoneNumberError.classList.remove('hidden');
+                }
+                isValid = false;
+            } else if (!phoneNumberDigits.startsWith('7')) {
+                if (phoneNumberError) {
+                    phoneNumberError.textContent = 'رقم الهاتف يجب أن يبدأ بـ 7';
+                    phoneNumberError.classList.remove('hidden');
+                }
+                isValid = false;
+            }
+        }
+        
+        return { isValid, fullName, phoneNumberDigits };
+    };
+    
+    // عرض النموذج عند اختيار نوع التسجيل
+    const showAuthForm = (mode) => {
+        isLoginMode = mode;
+        if (authTypeSelection) authTypeSelection.classList.add('hidden');
+        if (authFormContainer) authFormContainer.classList.remove('hidden');
+        
+        // تحديث الأزرار
+        if (isLoginMode) {
+            if (loginTabBtn) {
+                loginTabBtn.classList.remove('bg-gray-600');
+                loginTabBtn.classList.add('bg-blue-600');
+            }
+            if (registerTabBtn) {
+                registerTabBtn.classList.remove('bg-blue-600');
+                registerTabBtn.classList.add('bg-gray-600');
+            }
+            if (loginModalTitle) loginModalTitle.textContent = 'تسجيل الدخول';
+            if (loginSubmitBtn) loginSubmitBtn.textContent = 'تسجيل الدخول';
+        } else {
+            if (registerTabBtn) {
+                registerTabBtn.classList.remove('bg-gray-600');
+                registerTabBtn.classList.add('bg-blue-600');
+            }
+            if (loginTabBtn) {
+                loginTabBtn.classList.remove('bg-blue-600');
+                loginTabBtn.classList.add('bg-gray-600');
+            }
+            if (loginModalTitle) loginModalTitle.textContent = 'إنشاء حساب';
+            if (loginSubmitBtn) loginSubmitBtn.textContent = 'إنشاء حساب';
+        }
+    };
+    
+    // أزرار اختيار النوع
+    if (selectLoginBtn) {
+        selectLoginBtn.addEventListener('click', () => showAuthForm(true));
+    }
+    if (selectRegisterBtn) {
+        selectRegisterBtn.addEventListener('click', () => showAuthForm(false));
+    }
+    
+    // أزرار التبديل بين تسجيل الدخول وإنشاء حساب
+    if (loginTabBtn && registerTabBtn) {
+        loginTabBtn.addEventListener('click', () => {
+            isLoginMode = true;
+            loginTabBtn.classList.remove('bg-gray-600');
+            loginTabBtn.classList.add('bg-blue-600');
+            registerTabBtn.classList.remove('bg-blue-600');
+            registerTabBtn.classList.add('bg-gray-600');
+            if (loginModalTitle) loginModalTitle.textContent = 'تسجيل الدخول';
+            if (loginSubmitBtn) loginSubmitBtn.textContent = 'تسجيل الدخول';
+        });
+        
+        registerTabBtn.addEventListener('click', () => {
+            isLoginMode = false;
+            registerTabBtn.classList.remove('bg-gray-600');
+            registerTabBtn.classList.add('bg-blue-600');
+            loginTabBtn.classList.remove('bg-blue-600');
+            loginTabBtn.classList.add('bg-gray-600');
+            if (loginModalTitle) loginModalTitle.textContent = 'إنشاء حساب';
+            if (loginSubmitBtn) loginSubmitBtn.textContent = 'إنشاء حساب';
+        });
+    }
+    
+    // إعادة تعيين النموذج عند فتح المودال
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) {
+        const modalCloseBtn = loginModal.querySelector('.modal-close-btn');
+        if (modalCloseBtn) {
+            modalCloseBtn.addEventListener('click', () => {
+                if (authTypeSelection) authTypeSelection.classList.remove('hidden');
+                if (authFormContainer) authFormContainer.classList.add('hidden');
+                if (uiElements.loginForm) uiElements.loginForm.reset();
+                if (fullNameError) fullNameError.classList.add('hidden');
+                if (phoneNumberError) phoneNumberError.classList.add('hidden');
+            });
+        }
+    }
+
     // Login form
     if (uiElements.loginForm) {
         uiElements.loginForm.addEventListener('submit', async (e) => {
@@ -2061,60 +2356,78 @@ const setupEventListeners = () => {
                 return;
             }
 
-            const fullName = uiElements.fullNameInput.value.trim();
-            let phoneNumberDigits = uiElements.phoneNumberInput.value.trim();
-
-            if (!fullName || !phoneNumberDigits) {
-                alertUserMessage('الرجاء تعبئة جميع الحقول.', 'error');
+            // التحقق من صحة البيانات
+            const validation = validateForm();
+            if (!validation.isValid) {
                 return;
             }
 
-            const phoneRegex = /^[0-9]{11}$/;
-            if (!phoneRegex.test(phoneNumberDigits)) {
-                alertUserMessage('الرجاء إدخال 11 رقمًا فقط لرقم الهاتف بعد 964.', 'error');
-                return;
-            }
+            const fullName = validation.fullName;
+            let phoneNumberDigits = validation.phoneNumberDigits;
 
             const fullPhoneNumber = `+964${phoneNumberDigits}`;
-            console.log("Attempting to register/login with:", { fullName, fullPhoneNumber });
+            console.log("Attempting to register/login with:", { fullName, fullPhoneNumber, isLoginMode });
 
             try {
-                // البحث عن مستخدم موجود بنفس المعلومات
-                const existingUser = await findExistingUser(fullName, fullPhoneNumber);
+                if (isLoginMode) {
+                    // وضع تسجيل الدخول
+                    const existingUser = await findExistingUser(fullName, fullPhoneNumber);
 
-                if (existingUser) {
-                    // المستخدم موجود، تسجيل دخول للحساب الموجود
-                    console.log("Existing user found, switching to existing account:", existingUser.userId);
+                    if (existingUser) {
+                        // المستخدم موجود، تسجيل دخول
+                        console.log("Existing user found, logging in:", existingUser.userId);
 
-                    // تسجيل الخروج من الحساب المجهول الحالي إذا كان مختلفاً
-                    if (userId && userId !== existingUser.userId) {
-                        console.log("Signing out from current anonymous account to switch to existing account");
-                        await signOut(auth);
+                        // استخدام معرف المستخدم الموجود
+                        // نحتفظ بالحساب المجهول الحالي للوصول إلى البيانات
+                        const existingUserId = existingUser.userId;
+                        currentUserProfile = existingUser.data;
+                        
+                        // ملاحظة مهمة: userId يجب أن يبقى auth.currentUser.uid للوصول إلى cart و orders
+                        // لأن القواعد تتطلب أن userId في المسار يطابق auth.uid
+                        // نحتفظ ب existingUserId في currentUserProfile للعرض فقط
+                        // userId يبقى كما هو (auth.currentUser.uid) للوصول إلى البيانات
+                        
+                        // إعادة تهيئة الـ listeners مع معرف المستخدم الموجود
+                        // لكن نحتفظ بـ auth.currentUser.uid في userId للوصول إلى البيانات
+                        // لأن القواعد تتطلب أن userId في المسار يطابق auth.uid
+
+                        // تحديث UI
+                        if (uiElements.profileDetailsName) uiElements.profileDetailsName.textContent = existingUser.data.fullName || 'مستخدم';
+                        if (uiElements.profileDetailsPhone) uiElements.profileDetailsPhone.textContent = existingUser.data.phoneNumber || 'N/A';
+                        if (uiElements.profileDetailsImage) uiElements.profileDetailsImage.src = existingUser.data.profilePicUrl || 'https://placehold.co/100x100/eeeeee/333333?text=User';
+
+                        if (existingUser.data.createdAt) {
+                            const date = new Date(existingUser.data.createdAt);
+                            if (uiElements.profileDetailsRegisteredDate) uiElements.profileDetailsRegisteredDate.textContent = `تاريخ التسجيل: ${date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })} في ${date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+                        }
+
+                        // إعادة تهيئة الـ listeners
+                        setupRealtimeListeners();
+                        alertUserMessage(`مرحباً بعودتك ${existingUser.data.fullName}! تم تسجيل دخولك بنجاح.`, 'success');
+                        
+                        // إغلاق المودال
+                        setTimeout(() => {
+                            if (uiElements.loginModal) uiElements.loginModal.classList.add('hidden');
+                            if (authTypeSelection) authTypeSelection.classList.remove('hidden');
+                            if (authFormContainer) authFormContainer.classList.add('hidden');
+                            if (uiElements.loginForm) uiElements.loginForm.reset();
+                            if (fullNameError) fullNameError.classList.add('hidden');
+                            if (phoneNumberError) phoneNumberError.classList.add('hidden');
+                        }, 1500);
+                    } else {
+                        alertUserMessage('هذا الحساب غير موجود. يرجى التحقق من المعلومات أو إنشاء حساب جديد.', 'error');
+                        return;
                     }
-
-                    // تعيين المستخدم الموجود
-                    userId = existingUser.userId;
-                    currentUserProfile = existingUser.data;
-
-                    // محاكاة تسجيل الدخول للمستخدم الموجود
-                    // هنا نحتاج لتسجيل الدخول بطريقة مختلفة أو إدارة الجلسة بشكل مخصص
-
-                    // تحديث UI
-                    if (uiElements.profileDetailsName) uiElements.profileDetailsName.textContent = existingUser.data.fullName || 'مستخدم';
-                    if (uiElements.profileDetailsPhone) uiElements.profileDetailsPhone.textContent = existingUser.data.phoneNumber || 'N/A';
-                    if (uiElements.profileDetailsImage) uiElements.profileDetailsImage.src = existingUser.data.profilePicUrl || 'https://placehold.co/100x100/eeeeee/333333?text=User';
-
-                    if (existingUser.data.createdAt) {
-                        const date = new Date(existingUser.data.createdAt);
-                        if (uiElements.profileDetailsRegisteredDate) uiElements.profileDetailsRegisteredDate.textContent = `تاريخ التسجيل: ${date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })} في ${date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
-                    }
-
-                    // إعداد Real-time listeners للحساب الموجود
-                    setupRealtimeListeners();
-
-                    alertUserMessage(`مرحباً بعودتك ${existingUser.data.fullName}! تم تسجيل دخولك للحساب الموجود.`, 'success');
                 } else {
-                    // مستخدم جديد، التحقق من وجود UID حالي أو إنشاء واحد جديد
+                    // وضع إنشاء حساب
+                    // التحقق من وجود رقم الهاتف
+                    const phoneExists = await checkPhoneExists(fullPhoneNumber);
+                    if (phoneExists) {
+                        alertUserMessage('رقم الهاتف مسجل مسبقاً. يرجى استخدام رقم آخر أو تسجيل الدخول.', 'error');
+                        return;
+                    }
+
+                    // إنشاء حساب جديد
                     if (!userId) {
                         if (!auth.currentUser) {
                             await signInAnonymously(auth);
@@ -2124,12 +2437,10 @@ const setupEventListeners = () => {
 
                     console.log("Creating new user with UID:", userId);
 
-                    // التحقق من عدم وجود ملف شخصي لهذا UID مسبقاً
                     const existingProfileRef = doc(db, `users/${userId}/userProfile`, userId);
                     const existingProfileSnap = await getDoc(existingProfileRef);
 
                     if (existingProfileSnap.exists()) {
-                        // يوجد ملف شخصي مسبق، قم بتحديثه
                         await updateDoc(existingProfileRef, {
                             fullName: fullName,
                             phoneNumber: fullPhoneNumber,
@@ -2138,7 +2449,6 @@ const setupEventListeners = () => {
                         console.log("Updated existing user profile in Firestore.");
                         alertUserMessage('تم تحديث بيانات حسابك بنجاح!', 'success');
                     } else {
-                        // إنشاء ملف شخصي جديد
                         const newUserData = {
                             fullName: fullName,
                             phoneNumber: fullPhoneNumber,
@@ -2151,7 +2461,6 @@ const setupEventListeners = () => {
                         alertUserMessage('تم إنشاء حساب جديد بنجاح!', 'success');
                     }
 
-                    // تحديث currentUserProfile
                     const updatedProfileSnap = await getDoc(existingProfileRef);
                     currentUserProfile = updatedProfileSnap.data();
                 }
@@ -2189,6 +2498,17 @@ const setupEventListeners = () => {
                 setTimeout(() => {
                     if (uiElements.loginModal) uiElements.loginModal.classList.add('hidden');
                     if (uiElements.loginMessage) uiElements.loginMessage.textContent = '';
+                    if (authTypeSelection) authTypeSelection.classList.remove('hidden');
+                    if (authFormContainer) authFormContainer.classList.add('hidden');
+                    if (uiElements.loginForm) uiElements.loginForm.reset();
+                    if (fullNameError) {
+                        fullNameError.classList.add('hidden');
+                        fullNameError.textContent = '';
+                    }
+                    if (phoneNumberError) {
+                        phoneNumberError.classList.add('hidden');
+                        phoneNumberError.textContent = '';
+                    }
                 }, 1500);
 
             } catch (error) {
@@ -2202,11 +2522,37 @@ const setupEventListeners = () => {
     if (uiElements.profileDetailsLogoutBtn) {
         uiElements.profileDetailsLogoutBtn.addEventListener('click', async () => {
             try {
+                // إيقاف الـ listeners قبل تسجيل الخروج لتجنب أخطاء الاتصال
+                if (cartUnsubscribe) {
+                    cartUnsubscribe();
+                    cartUnsubscribe = null;
+                }
+                if (ordersUnsubscribe) {
+                    ordersUnsubscribe();
+                    ordersUnsubscribe = null;
+                }
+                
+                if (userId) {
+                    // تنظيف البيانات
+                    currentCart = [];
+                    currentUserProfile = null;
+                    isAdmin = false;
+                    
+                    // إخفاء الأزرار
+                    if (uiElements.developerButtons) uiElements.developerButtons.classList.add('hidden');
+                    if (uiElements.developerStatus) uiElements.developerStatus.classList.add('hidden');
+                }
+                
+                // تسجيل الخروج
                 await signOut(auth);
                 console.log("User signed out.");
+                
                 // تغيير أيقونة البروفايل إلى كلمة "حسابي" بعد تسجيل الخروج
                 uiElements.loginProfileBtn.textContent = 'حسابي';
                 if (uiElements.profileDetailsModal) uiElements.profileDetailsModal.classList.add('hidden');
+                
+                // إعادة تعيين userId
+                userId = null;
             }
             catch (error) {
                 console.error("Error signing out:", error);
@@ -2332,6 +2678,68 @@ const setupEventListeners = () => {
                     return;
                 }
 
+                // إنشاء معرف فريد للطلب
+                const orderId = `order_${Date.now()}_${userId}`;
+                // إنشاء معرف قصير للـ callback (تيليجرام يسمح بحد أقصى 64 حرف)
+                // استخدام hash قصير من orderId و userId
+                const shortOrderId = orderId.substring(6, 20); // أخذ جزء من timestamp
+                const shortUserId = userId.substring(0, 8); // أخذ أول 8 أحرف من userId
+                const callbackData = `rev_${shortOrderId}_${shortUserId}`; // إجمالي أقل من 64 حرف
+                
+                // حفظ الطلب في قاعدة البيانات
+                const orderData = {
+                    orderId: orderId,
+                    userId: userId,
+                    fullName: fullName,
+                    phoneNumber: fullPhoneNumber,
+                    governorate: governorate,
+                    district: district,
+                    notes: notes || '',
+                    items: cartToProcess.map(item => ({
+                        productId: item.productId,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
+                    status: 'received', // تم استلام الطلب
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // حساب المجموع
+                let cartTotalForBot = 0;
+                let hasNonFreeDeliveryItems = false;
+                cartToProcess.forEach((item) => {
+                    const productData = productsData.find(p => p.id === item.productId);
+                    if (productData && !productData.freeDelivery) {
+                        hasNonFreeDeliveryItems = true;
+                    }
+                    cartTotalForBot += (item.price * item.quantity);
+                });
+                const deliveryFee = hasNonFreeDeliveryItems ? 5000 : 0;
+                orderData.total = cartTotalForBot + deliveryFee;
+                orderData.deliveryFee = deliveryFee;
+
+                // حفظ callback_data في بيانات الطلب
+                orderData.callbackData = callbackData;
+                
+                // حفظ الطلب في Firestore
+                const orderDocRef = await addDoc(collection(db, `users/${userId}/orders`), orderData);
+                
+                // جمع صور المنتجات من الطلب
+                const orderImages = [];
+                for (const item of cartToProcess) {
+                    const productData = productsData.find(p => p.id === item.productId);
+                    if (productData) {
+                        const mainImage = (productData.imageUrls && productData.imageUrls.length > 0) 
+                            ? productData.imageUrls[0] 
+                            : productData.imageUrl;
+                        if (mainImage && !orderImages.includes(mainImage)) {
+                            orderImages.push(mainImage);
+                        }
+                    }
+                }
+
                 let orderMessage = `✅ *طلب جديد!* ✅\n\n`;
                 orderMessage += `*معلومات العميل:*\n`;
                 orderMessage += `الاسم: ${fullName}\n`;
@@ -2353,25 +2761,14 @@ const setupEventListeners = () => {
                 }
 
                 orderMessage += `*تفاصيل الطلب:*\n`;
-                let cartTotalForBot = 0;
-                let hasNonFreeDeliveryItems = false;
-
                 cartToProcess.forEach((item, index) => {
-                    // البحث عن المنتج للتحقق من التوصيل المجاني
                     const productData = productsData.find(p => p.id === item.productId);
                     const freeDeliveryText = (productData && productData.freeDelivery) ? ' (توصيل مجاني)' : '';
-
-                    if (productData && !productData.freeDelivery) {
-                        hasNonFreeDeliveryItems = true;
-                    }
-
                     orderMessage += `${index + 1}. ${item.name} (${item.quantity}x)${freeDeliveryText} - ${Math.round(item.price).toLocaleString('en-US')} د.ع = ${Math.round(item.price * item.quantity).toLocaleString('en-US')} د.ع\n`;
-                    cartTotalForBot += (item.price * item.quantity);
                 });
 
                 orderMessage += `\nالمجموع الفرعي: ${Math.round(cartTotalForBot).toLocaleString('en-US')} د.ع\n`;
 
-                const deliveryFee = hasNonFreeDeliveryItems ? 5000 : 0;
                 if (hasNonFreeDeliveryItems) {
                     orderMessage += `رسوم التوصيل: 5,000 د.ع\n`;
                     orderMessage += `*المجموع الكلي: ${Math.round(cartTotalForBot + deliveryFee).toLocaleString('en-US')} د.ع (بما في ذلك التوصيل)*\n\n`;
@@ -2383,14 +2780,45 @@ const setupEventListeners = () => {
                 orderMessage += `الدفع عند الاستلام\n`;
                 orderMessage += `التوصيل لجميع محافظات العراق\n`;
 
+                // إرسال الرسالة مع الصور
+                let response;
+                
+                if (orderImages.length > 0) {
+                    // إرسال الصور أولاً (حتى 10 صور)
+                    const imagesToSend = orderImages.slice(0, 10);
+                    const photoPayloads = imagesToSend.map((photo, index) => ({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        photo: photo,
+                        caption: index === 0 ? `📸 صور منتجات الطلب` : undefined
+                    }));
+                    
+                    // إرسال الصور
+                    for (const photoPayload of photoPayloads) {
+                        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(photoPayload)
+                        });
+                    }
+                }
+                
+                // إرسال رسالة النص مع زر المراجعة
                 const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
                 const telegramPayload = {
                     chat_id: TELEGRAM_CHAT_ID,
                     text: orderMessage,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [[
+                            {
+                                text: '✅ مراجعة الطلب',
+                                callback_data: callbackData
+                            }
+                        ]]
+                    }
                 };
 
-                const response = await fetch(telegramApiUrl, {
+                response = await fetch(telegramApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(telegramPayload)
@@ -2635,6 +3063,19 @@ const setupEventListeners = () => {
             const freeDelivery = document.getElementById('edit-product-free-delivery').checked;
             const removeWhiteBackground = document.getElementById('edit-product-remove-white-bg').checked;
             const availability = document.getElementById('edit-product-availability').value;
+            
+            // معالجة الخصم
+            const hasDiscount = document.getElementById('edit-product-has-discount').checked;
+            const discountPriceInput = document.getElementById('edit-product-discount-price');
+            let discountPrice = null;
+            
+            if (hasDiscount && discountPriceInput && discountPriceInput.value) {
+                discountPrice = parseFloat(discountPriceInput.value);
+                if (isNaN(discountPrice) || discountPrice >= price) {
+                    alertUserMessage('سعر الخصم يجب أن يكون أقل من السعر الأصلي.', 'error');
+                    return;
+                }
+            }
 
             // جمع روابط الصور الخمسة
             const imageUrls = [];
@@ -2652,7 +3093,7 @@ const setupEventListeners = () => {
 
             try {
                 const productDocRef = doc(db, `products`, productId);
-                await updateDoc(productDocRef, {
+                const updateData = {
                     name,
                     description,
                     price,
@@ -2662,7 +3103,16 @@ const setupEventListeners = () => {
                     freeDelivery,
                     removeWhiteBackground,
                     availability: availability || ''
-                });
+                };
+                
+                // إضافة أو إزالة الخصم
+                if (hasDiscount && discountPrice !== null) {
+                    updateData.discountPrice = discountPrice;
+                } else {
+                    updateData.discountPrice = null;
+                }
+                
+                await updateDoc(productDocRef, updateData);
                 alertUserMessage('تم تعديل المنتج بنجاح!', 'success');
                 setTimeout(() => {
                     if (uiElements.editProductModal) uiElements.editProductModal.classList.add('hidden');
@@ -2780,10 +3230,263 @@ const setupEventListeners = () => {
             displayProducts(productsData); // Show all products
         });
     }
+
+    // Orders tracking button
+    const bottomOrdersBtn = document.getElementById('bottom-orders-btn');
+    const ordersTrackingModal = document.getElementById('orders-tracking-modal');
+    const ordersList = document.getElementById('orders-list');
+    
+    if (bottomOrdersBtn) {
+        bottomOrdersBtn.addEventListener('click', async () => {
+            if (!userId) {
+                alertUserMessage('الرجاء تسجيل الدخول لمتابعة طلباتك.', 'warning');
+                return;
+            }
+            
+            if (ordersTrackingModal) {
+                await displayOrders();
+                ordersTrackingModal.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Display orders function
+    const displayOrders = async () => {
+        if (!ordersList || !userId) return;
+        
+        // إلغاء الاشتراك السابق إن وجد
+        if (ordersUnsubscribe) {
+            ordersUnsubscribe();
+            ordersUnsubscribe = null;
+        }
+        
+        try {
+            const ordersRef = collection(db, `users/${userId}/orders`);
+            
+            // إيقاف الـ listener القديم إن وجد
+            if (ordersUnsubscribe) {
+                ordersUnsubscribe();
+            }
+            
+            // استخدام onSnapshot للتحديث التلقائي
+            ordersUnsubscribe = onSnapshot(ordersRef, (ordersSnapshot) => {
+                if (ordersSnapshot.empty) {
+                    ordersList.innerHTML = '<p class="text-center text-purple-300">لا توجد طلبات حالياً</p>';
+                    return;
+                }
+                
+                ordersList.innerHTML = '';
+                const orders = [];
+                ordersSnapshot.forEach(doc => {
+                    orders.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // ترتيب الطلبات حسب التاريخ (الأحدث أولاً)
+                orders.sort((a, b) => {
+                    const dateA = new Date(a.createdAt || 0);
+                    const dateB = new Date(b.createdAt || 0);
+                    return dateB - dateA;
+                });
+                
+                orders.forEach(order => {
+                    const orderDate = new Date(order.createdAt);
+                    const statusText = getStatusText(order.status);
+                    const statusColor = getStatusColor(order.status);
+                    
+                    let itemsHtml = '';
+                    if (order.items && order.items.length > 0) {
+                        order.items.forEach((item, index) => {
+                            itemsHtml += `<p class="text-sm">${index + 1}. ${item.name} (${item.quantity}x) - ${Math.round(item.price * item.quantity).toLocaleString('en-US')} د.ع</p>`;
+                        });
+                    }
+                    
+                    const orderHtml = `
+                        <div class="bg-purple-800 p-4 rounded-lg mb-4 border border-purple-700">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-lg font-bold text-white">طلب #${order.orderId ? order.orderId.substring(6, 15) : order.id.substring(0, 8)}</h4>
+                                <span class="px-3 py-1 rounded text-sm font-semibold" style="background-color: ${statusColor}; color: white;">${statusText}</span>
+                            </div>
+                            <p class="text-purple-300 text-sm mb-2">التاريخ: ${orderDate.toLocaleDateString('ar-EG')} ${orderDate.toLocaleTimeString('ar-EG')}</p>
+                            <p class="text-purple-300 text-sm mb-2">المحافظة: ${order.governorate || 'غير محدد'}</p>
+                            <p class="text-purple-300 text-sm mb-3">القضاء/المدينة: ${order.district || 'غير محدد'}</p>
+                            <div class="border-t border-purple-700 pt-2 mb-2">
+                                <p class="text-white font-semibold mb-1">المنتجات:</p>
+                                ${itemsHtml || '<p class="text-sm text-purple-300">لا توجد منتجات</p>'}
+                            </div>
+                            <div class="border-t border-purple-700 pt-2">
+                                <p class="text-green-400 font-bold text-lg">المجموع: ${Math.round(order.total || 0).toLocaleString('en-US')} د.ع</p>
+                            </div>
+                        </div>
+                    `;
+                    ordersList.insertAdjacentHTML('beforeend', orderHtml);
+                });
+            }, (error) => {
+                console.error("Error fetching orders:", error);
+                ordersList.innerHTML = '<p class="text-center text-red-400">حدث خطأ في جلب الطلبات</p>';
+            });
+        } catch (error) {
+            console.error("Error setting up orders listener:", error);
+            ordersList.innerHTML = '<p class="text-center text-red-400">حدث خطأ في جلب الطلبات</p>';
+        }
+    };
+    
+    const getStatusText = (status) => {
+        const statusMap = {
+            'received': 'تم استلام الطلب',
+            'reviewed': 'تم مراجعة طلبك وسيصلك الطلب خلال وقت محدد'
+        };
+        return statusMap[status] || status;
+    };
+    
+    const getStatusColor = (status) => {
+        const colorMap = {
+            'received': '#3b82f6',
+            'reviewed': '#10b981'
+        };
+        return colorMap[status] || '#6b7280';
+    };
+    
+    // Handle discount checkbox toggle
+    const hasDiscountCheckbox = document.getElementById('edit-product-has-discount');
+    const discountContainer = document.getElementById('edit-product-discount-container');
+    
+    if (hasDiscountCheckbox && discountContainer) {
+        hasDiscountCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                discountContainer.classList.remove('hidden');
+            } else {
+                discountContainer.classList.add('hidden');
+                const discountPriceInput = document.getElementById('edit-product-discount-price');
+                if (discountPriceInput) discountPriceInput.value = '';
+            }
+        });
+    }
+};
+
+// دالة لتحديث حالة الطلب (يتم استدعاؤها من webhook تيليجرام)
+const updateOrderStatus = async (orderId, userId, newStatus) => {
+    try {
+        const ordersRef = collection(db, `users/${userId}/orders`);
+        const ordersSnapshot = await getDocs(ordersRef);
+        
+        let orderDocId = null;
+        ordersSnapshot.forEach(doc => {
+            if (doc.data().orderId === orderId) {
+                orderDocId = doc.id;
+            }
+        });
+        
+        if (orderDocId) {
+            const orderRef = doc(db, `users/${userId}/orders`, orderDocId);
+            await updateDoc(orderRef, {
+                status: newStatus,
+                updatedAt: new Date().toISOString()
+            });
+            console.log(`Order ${orderId} status updated to ${newStatus}`);
+            return true;
+        } else {
+            console.error(`Order ${orderId} not found`);
+            return false;
+        }
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        return false;
+    }
+};
+
+// دالة لمعالجة callback من تيليجرام (يتم استدعاؤها من webhook)
+// هذه الدالة تستخدم في webhook server (telegram-webhook.js)
+const handleTelegramCallback = async (callbackQuery) => {
+    try {
+        const callbackData = callbackQuery.data;
+        const messageId = callbackQuery.message?.message_id;
+        const chatId = callbackQuery.message?.chat?.id;
+        const originalMessageText = callbackQuery.message?.text || '';
+        
+        if (!callbackData || !callbackData.startsWith('rev_')) {
+            return { success: false, error: 'Invalid callback data' };
+        }
+        
+        // إظهار loading في تيليجرام
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                callback_query_id: callbackQuery.id,
+                text: 'جاري مراجعة الطلب...'
+            })
+        });
+        
+        // البحث عن الطلب باستخدام callback_data المحفوظ
+        const usersColRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersColRef);
+        
+        for (const userDoc of usersSnapshot.docs) {
+            const userUid = userDoc.id;
+            const ordersRef = collection(db, `users/${userUid}/orders`);
+            const ordersSnapshot = await getDocs(ordersRef);
+            
+            for (const orderDoc of ordersSnapshot.docs) {
+                const orderData = orderDoc.data();
+                // التحقق من أن callback_data يطابق
+                if (orderData.callbackData === callbackData) {
+                    // تحديث حالة الطلب
+                    const orderDocId = orderDoc.id;
+                    const orderRef = doc(db, `users/${userUid}/orders`, orderDocId);
+                    await updateDoc(orderRef, {
+                        status: 'reviewed',
+                        updatedAt: new Date().toISOString()
+                    });
+                    
+                    // تحديث رسالة تيليجرام
+                    const updatedMessage = originalMessageText + '\n\n✅ *تم مراجعة طلبك وسيصلك الطلب خلال وقت محدد*';
+                    
+                    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: chatId || TELEGRAM_CHAT_ID,
+                            message_id: messageId,
+                            text: updatedMessage,
+                            parse_mode: 'Markdown',
+                            reply_markup: {
+                                inline_keyboard: [[
+                                    {
+                                        text: '✅ تم المراجعة',
+                                        callback_data: callbackData
+                                    }
+                                ]]
+                            }
+                        })
+                    });
+                    
+                    // إرسال رسالة تأكيد منفصلة
+                    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: chatId || TELEGRAM_CHAT_ID,
+                            text: `✅ تم مراجعة الطلب ${orderData.orderId} بنجاح!\n\n✅ تم تحديث حالة الطلب في الموقع إلى: *تم مراجعة طلبك وسيصلك الطلب خلال وقت محدد*`,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                    
+                    return { success: true };
+                }
+            }
+        }
+        
+        return { success: false, error: 'Order not found' };
+    } catch (error) {
+        console.error("Error handling telegram callback:", error);
+        return { success: false, error: error.message };
+    }
 };
 
 // Make functions available globally for HTML onclick events
 window.removeDeveloper = removeDeveloper;
+window.updateOrderStatus = updateOrderStatus;
+window.handleTelegramCallback = handleTelegramCallback;
 
 // Initialize on window load
 window.onload = async () => {

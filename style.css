@@ -1083,3 +1083,27 @@ section:not(.hero-banner) h3 {
     color: #1f2937 !important;
     font-weight: bold !important;
 }
+
+/* تثبيت خانة البحث */
+.sticky-search-container {
+    position: sticky !important;
+    top: 80px !important;
+    z-index: 40 !important;
+    background-color: #ffffff !important;
+    padding: 1rem 0 !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* أنماط السعر المشطوب */
+.product-price-old {
+    text-decoration: line-through !important;
+    color: #ef4444 !important;
+    font-size: 0.9em !important;
+    margin-left: 0.5rem !important;
+}
+
+.product-price-new {
+    color: #10b981 !important;
+    font-weight: bold !important;
+}
