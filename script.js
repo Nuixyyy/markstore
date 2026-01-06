@@ -19,7 +19,7 @@ const TELEGRAM_BOT_TOKEN = '8205867201:AAHJ89--5boZu2qOZ4iLKzt6FCAd8MSOgnM';
 const TELEGRAM_CHAT_ID = '1526903621';
 
 // Developer UID - معرف المطور الرئيسي من Firebase
-const MAIN_DEVELOPER_UID = 'NrXWrgBSsGfd9x8iTj8rvAQmoxI3';
+const MAIN_DEVELOPER_UID = '6BxOu5NtQAhOxv3WsllnQ6bgi5q1';
 
 // قائمة معرفات المطورين
 let developerUIDs = [MAIN_DEVELOPER_UID];
