@@ -15,7 +15,7 @@ const MY_FIREBASE_CONFIG = {
 };
 
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1467304395103539374/6oUFL5bhvPoKypn1OSaiTnSm5ld5tquuB-7Ma0qDMPRv63KKcmrUzpn-ZZdPbgCKScLF';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1467572898893008917/HsA22ZFVela6vMxOfQ9s6tDNPbOwzgeDBt8-083jky9cwTFX1gRPXkK_K1qpC9PZsGFE';
 
 
 const sendDiscordWebhook = async (content, embeds = []) => {
@@ -3186,7 +3186,7 @@ const setupEventListeners = () => {
                 
                 try {
                     
-                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@1385265431354540204>`, [embed]);
+                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@973658542122893402>`, [embed]);
 
                     
                     if (orderImages.length > 1) {
