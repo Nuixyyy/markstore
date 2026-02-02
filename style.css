@@ -8,7 +8,7 @@ body {
   color: #333333 !important;
 }
 
-/* تخصيص الألوان الجديدة */
+
 :root {
   --primary-color: #1a012a;
   --primary-light: #2a0140;
@@ -24,12 +24,14 @@ body {
   --border-color: #4c00ff;
 }
 
-/* جعل جميع الحدود بنفسجية */
-*, *::before, *::after {
+
+*,
+*::before,
+*::after {
   border-color: var(--border-color) !important;
 }
 
-/* تطبيق اللون البنفسجي على جميع أنواع الحدود */
+
 [class*="border"],
 .border,
 .border-t,
@@ -46,7 +48,7 @@ button {
   border-color: var(--border-color) !important;
 }
 
-/* تحسين التصميم المتجاوب */
+
 @media (max-width: 640px) {
   .container {
     padding-left: 0.75rem;
@@ -100,7 +102,7 @@ button {
   }
 }
 
-/* تحسين البطاقات للأجهزة الصغيرة */
+
 @media (max-width: 640px) {
   .bg-purple-800 {
     background-color: var(--primary-color) !important;
@@ -126,7 +128,7 @@ button {
     color: var(--text-light) !important;
   }
 
-  /* تحسين حجم البطاقات للتخطيط المكون من عمودين */
+ 
   .product-card-hover {
     min-height: 320px !important;
   }
@@ -162,7 +164,7 @@ button {
   }
 }
 
-/* تحسين النماذج للأجهزة الصغيرة */
+
 @media (max-width: 640px) {
   .modal-overlay .bg-purple-800 {
     margin: 0.5rem;
@@ -179,7 +181,7 @@ button {
   }
 }
 
-/* تحسين الشريط السفلي */
+
 .fixed.bottom-0 {
   z-index: 9999 !important;
 }
@@ -199,13 +201,13 @@ button {
   }
 }
 
-/* تحسين الحاوية الرئيسية */
+
 .container {
   max-width: 100%;
   margin: 0 auto;
 }
 
-/* أنماط Hero Banner - تصميم أبيض بالكامل */
+
 .hero-banner {
   position: relative;
   background: #ffffff !important;
@@ -271,7 +273,7 @@ button {
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
 }
 
-/* أنماط المنتجات المميزة */
+
 .featured-products-section {
   background: #ffffff !important;
   border: 2px solid #280f6b !important;
@@ -365,17 +367,24 @@ button {
   box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
 }
 
-/* تأثيرات الحركة للعناصر المزخرفة */
+
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 .hero-banner .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
-/* تحسينات للشاشات الصغيرة */
+
 @media (max-width: 768px) {
   .hero-banner h1 {
     font-size: 2.5rem;
@@ -391,7 +400,7 @@ button {
   }
 }
 
-/* تحسين البطاقات */
+
 .product-card-hover {
   transition: all 0.3s ease;
   min-height: 300px;
@@ -402,7 +411,7 @@ button {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* تحسين صفحة تفاصيل المنتج للأجهزة المختلفة */
+
 #product-detail-page {
   width: 100vw;
   height: 100vh;
@@ -415,7 +424,7 @@ button {
   padding-right: 1rem;
 }
 
-/* تحسين زر الرجوع للأجهزة الصغيرة */
+
 @media (max-width: 640px) {
   #product-detail-page #back-to-previous {
     font-size: 0.875rem;
@@ -437,7 +446,7 @@ button {
   }
 }
 
-/* تحسين الصور للأجهزة المختلفة */
+
 @media (max-width: 768px) {
   #product-detail-page #main-product-image {
     height: 250px;
@@ -455,48 +464,48 @@ button {
   }
 }
 
-/* تحسين الأزرار في صفحة المنتج */
+
 #product-detail-page button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* تحسين التمرير في صفحة المنتج */
+
 #product-detail-page {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
 }
 
-/* تحسين تصميم القوائم المنبثقة */
+
 #categories-dropdown {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-    border: 2px solid #e5e7eb !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 2px solid #e5e7eb !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
 #categories-dropdown .category-filter-btn {
-    color: #374151 !important;
-    transition: all 0.3s ease !important;
+  color: #374151 !important;
+  transition: all 0.3s ease !important;
 }
 
 #categories-dropdown .category-filter-btn:hover {
-    background-color: #f3f4f6 !important;
-    color: #3b82f6 !important;
-    transform: translateX(5px) !important;
+  background-color: #f3f4f6 !important;
+  color: #3b82f6 !important;
+  transform: translateX(5px) !important;
 }
 
-/* تحسين أنماط الأزرار في القوائم المنبثقة */
+
 #categories-dropdown .edit-category-btn {
-    color: #3b82f6 !important;
+  color: #3b82f6 !important;
 }
 
 #categories-dropdown .delete-category-btn {
-    color: #ef4444 !important;
+  color: #ef4444 !important;
 }
 
 #categories-dropdown .edit-category-btn:hover,
 #categories-dropdown .delete-category-btn:hover {
-    transform: scale(1.1) !important;
+  transform: scale(1.1) !important;
 }
 
 .product-card-hover img {
@@ -507,7 +516,7 @@ button {
   image_rendering: pixelated;
 }
 
-/* قواعد حذف الخلفية البيضاء للمنتجات المحددة */
+
 .product-card-hover.remove-white-bg img {
   background-color: transparent !important;
   background: transparent !important;
@@ -516,7 +525,7 @@ button {
   filter: brightness(1.1) contrast(1.1);
 }
 
-/* تطبيق نفس القواعد على الصور في مودال تفاصيل المنتج */
+
 .product-detail-remove-white-bg #product-detail-main-image,
 .product-detail-remove-white-bg #product-detail-thumbnails img {
   background-color: transparent !important;
@@ -526,7 +535,7 @@ button {
   filter: brightness(1.1) contrast(1.1);
 }
 
-/* أنماط خاصة لتصنيف ماوس بادات - عرض في عمود واحد */
+
 .mousepads-category #products-container {
   grid-template-columns: 1fr !important;
   max-width: 600px;
@@ -538,7 +547,7 @@ button {
   min-height: auto !important;
 }
 
-/* إزالة الخلفية البيضاء من صور الماوس بادات فقط */
+
 .mousepads-category .product-card-hover img {
   height: 200px !important;
   background-color: transparent !important;
@@ -549,19 +558,19 @@ button {
   filter: brightness(1.1) contrast(1.1);
 }
 
-/* إزالة أي عناصر زائفة قد تسبب خلفية بيضاء */
+
 .mousepads-category .product-card-hover img::before,
 .mousepads-category .product-card-hover img::after {
   display: none !important;
   content: none !important;
 }
 
-/* تطبيق شفافية كاملة على الحاوي للماوس بادات */
+
 .mousepads-category .product-card-hover {
   background: transparent !important;
 }
 
-/* إزالة أي خلفية من البطاقة نفسها في قسم الماوس بادات */
+
 .mousepads-category .product-card-hover .bg-purple-800 {
   background: linear-gradient(135deg, rgba(26, 1, 42, 0.95), rgba(45, 4, 69, 0.95)) !important;
 }
@@ -582,7 +591,7 @@ button {
   }
 }
 
-/* تحسين الأزرار */
+
 button {
   transition: all 0.2s ease;
 }
@@ -591,14 +600,14 @@ button:hover {
   transform: translateY(-1px);
 }
 
-/* تحسين النصوص */
+
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* إخفاء شريط التمرير في المتصفحات المختلفة */
+
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -616,7 +625,7 @@ button:hover {
   background: var(--accent-color);
 }
 
-/* تحسين المودال للأجهزة الصغيرة */
+
 @media (max-width: 1024px) {
   #product-detail-modal .grid {
     grid-template-columns: 1fr !important;
@@ -631,13 +640,13 @@ button:hover {
   }
 }
 
-/* تحسين عرض الوصف */
+
 #product-detail-description {
   line-height: 1.6;
   text-align: justify;
 }
 
-/* تحسين الصور المصغرة */
+
 #product-detail-thumbnails .cursor-pointer {
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -647,7 +656,7 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* تحسين عرض الصور المصغرة للأجهزة الصغيرة */
+
 @media (max-width: 640px) {
   #product-detail-thumbnails {
     justify-content: flex-start;
@@ -660,12 +669,12 @@ button:hover {
   }
 }
 
-/* تأثير التدرج للأزرار الثابتة */
+
 .sticky.bottom-0 {
   background: linear-gradient(to top, var(--primary-color) 70%, transparent);
 }
 
-/* تحسين الأزرار */
+
 #add-to-cart-detail-btn,
 #buy-now-detail-btn {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -677,52 +686,52 @@ button:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* أنماط الحقول والمدخلات */
+
 .custom-input {
-    background-color: rgb(255, 255, 255, 0.95);
-    border: 2px solid #6b46c1;
-    color: #1a012a;
+  background-color: rgb(255, 255, 255, 0.95);
+  border: 2px solid #6b46c1;
+  color: #1a012a;
 }
 
-/* Edit Product Form Inputs */
+
 #edit-product-name,
 #edit-product-description,
 #edit-product-price,
 #edit-product-image-url,
 #edit-product-category {
-    background-color: rgb(255, 255, 255, 0.95) !important;
-    border: 2px solid #6b46c1 !important;
-    color: #1a012a !important;
+  background-color: rgb(255, 255, 255, 0.95) !important;
+  border: 2px solid #6b46c1 !important;
+  color: #1a012a !important;
 }
 
 .custom-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .custom-input:focus {
-    border-color: #8b5cf6;
-    background-color: rgba(255, 255, 255, 0.15);
+  border-color: #8b5cf6;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* تحديث ألوان حقول تعديل المنتج */
+
 #edit-product-modal input,
 #edit-product-modal textarea,
 #edit-product-modal select {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    border: 2px solid #6b46c1 !important;
-    color: #1a012a !important;
-    font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #6b46c1 !important;
+  color: #1a012a !important;
+  font-weight: 500;
 }
 
 #edit-product-modal input:focus,
 #edit-product-modal textarea:focus,
 #edit-product-modal select:focus {
-    border-color: #8b5cf6 !important;
-    background-color: rgba(255, 255, 255, 1) !important;
-    outline: none;
+  border-color: #8b5cf6 !important;
+  background-color: rgba(255, 255, 255, 1) !important;
+  outline: none;
 }
 
-/* أنماط قسم التواصل */
+
 .contact-section {
   background: #ffffff !important;
   border-top: 2px solid #e5e7eb !important;
@@ -761,169 +770,177 @@ button:hover {
   color: #1d4ed8 !important;
 }
 
-/* تثبيت الهيدر في الأعلى */
+
 header {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 9999 !important;
-    background-color: #2d0445 !important;
-    width: 100% !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background-color: #2d0445 !important;
+  width: 100% !important;
 }
 
-/* إضافة مسافة للمحتوى تحت الهيدر المثبت */
+
 main {
-    margin-top: 80px !important;
-    padding-top: 20px !important;
-    background-color: #ffffff !important;
-    color: #333333 !important;
+  margin-top: 80px !important;
+  padding-top: 20px !important;
+  background-color: #ffffff !important;
+  color: #333333 !important;
 }
 
-/* تطبيق الخلفية البيضاء على المحتوى الرئيسي */
+
 .container {
-    background-color: #ffffff !important;
-    color: #333333 !important;
+  background-color: #ffffff !important;
+  color: #333333 !important;
 }
 
-/* تحديث ألوان النصوص في المحتوى الرئيسي */
-main h1, main h2, main h3, main h4, main h5, main h6,
-main p, main span, main div:not(.bg-purple-800):not(.bg-purple-700):not(.bg-purple-600) {
-    color: #000000 !important;
+
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6,
+main p,
+main span,
+main div:not(.bg-purple-800):not(.bg-purple-700):not(.bg-purple-600) {
+  color: #000000 !important;
 }
 
-/* الحفاظ على ألوان النصوص في العناصر الملونة */
-.bg-purple-800 *, 
-.bg-purple-700 *, 
+
+.bg-purple-800 *,
+.bg-purple-700 *,
 .bg-purple-600 *,
 .text-white,
 .text-purple-300,
 .text-purple-200,
 .text-purple-400 {
-    color: inherit !important;
+  color: inherit !important;
 }
 
-/* تغيير لون الهيدر إلى الأبيض بالكامل */
+
 header {
-    background: #ffffff !important;
-    color: #333333 !important;
-    border-bottom: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #333333 !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 
 header * {
-    color: #333333 !important;
+  color: #333333 !important;
 }
 
-/* تصميم جديد للقائمة السفلية - لون أبيض */
+
 .fixed.bottom-0 {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-    color: #374151 !important;
-    border: 2px solid #e5e7eb !important;
-    border-bottom: none !important;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  color: #374151 !important;
+  border: 2px solid #e5e7eb !important;
+  border-bottom: none !important;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 .fixed.bottom-0 button {
-    color: #374151 !important;
-    transition: all 0.3s ease !important;
+  color: #374151 !important;
+  transition: all 0.3s ease !important;
 }
 
 .fixed.bottom-0 button:hover {
-    color: #3b82f6 !important;
-    transform: translateY(-2px) !important;
+  color: #3b82f6 !important;
+  transform: translateY(-2px) !important;
 }
 
 .fixed.bottom-0 .text-xs {
-    color: #6b7280 !important;
+  color: #6b7280 !important;
 }
 
 .fixed.bottom-0 button:hover .text-xs {
-    color: #3b82f6 !important;
+  color: #3b82f6 !important;
 }
 
 .fixed.bottom-0 svg {
-    transition: all 0.3s ease !important;
+  transition: all 0.3s ease !important;
 }
 
 .fixed.bottom-0 button:hover svg {
-    transform: scale(1.1) !important;
-    color: #3b82f6 !important;
+  transform: scale(1.1) !important;
+  color: #3b82f6 !important;
 }
 
-/* خط الفاصل في الشريط السفلي */
+
 .fixed.bottom-0 .w-px {
-    background-color: #e5e7eb !important;
+  background-color: #e5e7eb !important;
 }
 
-/* تغيير ألوان البطاقات إلى خلفية بيضاء */
+
 .product-card-hover {
-    background-color: #ffffff !important;
-    color: #333333 !important;
-    border: 2px solid #6107f1 !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border: 2px solid #6107f1 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .product-card-hover h3,
 .product-card-hover p {
-    color: #333333 !important;
+  color: #333333 !important;
 }
 
 .product-card-hover .text-purple-300,
 .product-card-hover .text-purple-400 {
-    color: #6b7280 !important;
+  color: #6b7280 !important;
 }
 
 .product-card-hover .text-green-400 {
-    color: #10b981 !important;
+  color: #10b981 !important;
 }
 
 .product-card-hover .text-red-400 {
-    color: #ef4444 !important;
+  color: #ef4444 !important;
 }
 
 main {
-    padding-bottom: 120px !important;
+  padding-bottom: 120px !important;
 }
-/* الحفاظ على ألوان النماذج والأقسام الأخرى */
+
+
 .bg-purple-800,
 .bg-purple-700,
 .bg-purple-600 {
-    color: #ffffff !important;
+  color: #ffffff !important;
 }
 
-/* تحديث لون النص في Hero Banner لجعله مرئياً */
+
 .hero-banner {
-    color: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .hero-banner * {
-    color: #ffffff !important;
+  color: #ffffff !important;
 }
 
-/* تحديث ألوان العناوين في المحتوى الرئيسي */
+
 section:not(.hero-banner) h1,
 section:not(.hero-banner) h2,
 section:not(.hero-banner) h3 {
-    color: #2d0445 !important;
+  color: #2d0445 !important;
 }
 
-/* تحديث أنماط النماذج للخلفية البيضاء */
+
 .modal-overlay {
-    background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
-/* تغيير ألوان جميع القوائم المنبثقة إلى الأبيض */
-.modal-overlay > div,
+
+.modal-overlay>div,
 .modal-overlay .bg-purple-800,
 .modal-overlay .bg-purple-700,
 .modal-overlay .bg-purple-600 {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-    color: #333333 !important;
-    border: 2px solid #e5e7eb !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  color: #333333 !important;
+  border: 2px solid #e5e7eb !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* تحديث ألوان النصوص في المودالز */
+
 .modal-overlay h2,
 .modal-overlay h3,
 .modal-overlay h4,
@@ -932,178 +949,178 @@ section:not(.hero-banner) h3 {
 .modal-overlay span,
 .modal-overlay label,
 .modal-overlay div:not(.bg-green-500):not(.bg-red-500):not(.bg-blue-500) {
-    color: #1f2937 !important;
+  color: #1f2937 !important;
 }
 
-/* تحديث ألوان الأزرار في المودالز */
+
 .modal-overlay button {
-    transition: all 0.3s ease !important;
+  transition: all 0.3s ease !important;
 }
 
 .modal-overlay button:not(.bg-green-500):not(.bg-red-500):not(.bg-blue-500):not(.bg-purple-600):not(.bg-gray-500) {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
-    color: white !important;
-    border: 2px solid transparent !important;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+  color: white !important;
+  border: 2px solid transparent !important;
 }
 
 .modal-overlay button:not(.bg-green-500):not(.bg-red-500):not(.bg-blue-500):not(.bg-purple-600):not(.bg-gray-500):hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
 }
 
-/* تحديث ألوان الحقول في المودالز */
+
 .modal-overlay input,
 .modal-overlay textarea,
 .modal-overlay select {
-    background-color: #f9fafb !important;
-    border: 2px solid #d1d5db !important;
-    color: #1f2937 !important;
+  background-color: #f9fafb !important;
+  border: 2px solid #d1d5db !important;
+  color: #1f2937 !important;
 }
 
 .modal-overlay input:focus,
 .modal-overlay textarea:focus,
 .modal-overlay select:focus {
-    border-color: #3b82f6 !important;
-    background-color: #ffffff !important;
-    outline: none !important;
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  outline: none !important;
 }
 
-/* تحديث ألوان الأزرار الخاصة */
+
 .modal-overlay .bg-green-500 {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    color: white !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
 }
 
 .modal-overlay .bg-red-500 {
-    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-    color: white !important;
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
 }
 
 .modal-overlay .bg-blue-500 {
-    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-    color: white !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
 }
 
 .modal-overlay .bg-gray-500 {
-    background: linear-gradient(135deg, #6b7280, #4b5563) !important;
-    color: white !important;
+  background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+  color: white !important;
 }
 
-/* تحديث خلفية عناصر القائمة */
-.modal-overlay .space-y-2 > div,
-.modal-overlay .space-y-3 > div,
-.modal-overlay .space-y-4 > div {
-    background: transparent !important;
+
+.modal-overlay .space-y-2>div,
+.modal-overlay .space-y-3>div,
+.modal-overlay .space-y-4>div {
+  background: transparent !important;
 }
 
-/* تحديث ألوان النجوم في التقييمات */
+
 .modal-overlay .text-yellow-400 {
-    color: #fbbf24 !important;
+  color: #fbbf24 !important;
 }
 
 .modal-overlay .text-gray-400 {
-    color: #9ca3af !important;
+  color: #9ca3af !important;
 }
 
-/* تحديث ألوان رموز النجوم */
+
 .modal-overlay .star-rating svg {
-    transition: all 0.2s ease !important;
+  transition: all 0.2s ease !important;
 }
 
-/* تحديث ألوان الحدود في المودالز */
+
 .modal-overlay .border-purple-600,
 .modal-overlay .border-purple-700,
 .modal-overlay .border-t,
 .modal-overlay .border-b {
-    border-color: #e5e7eb !important;
+  border-color: #e5e7eb !important;
 }
 
-/* تحديث لون الخطوط الفاصلة */
+
 .modal-overlay .border-t {
-    border-top-color: #f3f4f6 !important;
+  border-top-color: #f3f4f6 !important;
 }
 
-/* تحديث ألوان الأزرار في سلة التسوق */
+
 .modal-overlay .cart-item button {
-    background: #f3f4f6 !important;
-    color: #374151 !important;
-    border: 1px solid #d1d5db !important;
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
 }
 
 .modal-overlay .cart-item button:hover {
-    background: #e5e7eb !important;
-    color: #1f2937 !important;
+  background: #e5e7eb !important;
+  color: #1f2937 !important;
 }
 
-/* تحديث ألوان عناصر المنتجات في السلة */
+
 .modal-overlay .cart-item {
-    background: #f9fafb !important;
-    border: 1px solid #f3f4f6 !important;
-    border-radius: 0.5rem !important;
+  background: #f9fafb !important;
+  border: 1px solid #f3f4f6 !important;
+  border-radius: 0.5rem !important;
 }
 
-/* تحديث لون النصوص في عناصر السلة */
+
 .modal-overlay .cart-item * {
-    color: #1f2937 !important;
+  color: #1f2937 !important;
 }
 
-/* تحديثات خاصة لمودال البروفايل */
+
 .modal-overlay #profile-modal img {
-    border: 3px solid #e5e7eb !important;
+  border: 3px solid #e5e7eb !important;
 }
 
-/* تحديث لون النصوص المساعدة */
+
 .modal-overlay .text-sm {
-    color: #6b7280 !important;
+  color: #6b7280 !important;
 }
 
-/* إغلاق المودال - تحديث لون الأيقونة */
+
 .modal-overlay .absolute.top-4.right-4 button {
-    background: #f3f4f6 !important;
-    color: #374151 !important;
-    border: 1px solid #d1d5db !important;
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
 }
 
 .modal-overlay .absolute.top-4.right-4 button:hover {
-    background: #e5e7eb !important;
-    color: #1f2937 !important;
+  background: #e5e7eb !important;
+  color: #1f2937 !important;
 }
 
-/* تحديث لون قسم التواصل للأبيض */
+
 .contact-section {
-    background: #ffffff !important;
-    color: #333333 !important;
+  background: #ffffff !important;
+  color: #333333 !important;
 }
 
 .contact-section * {
-    color: #333333 !important;
+  color: #333333 !important;
 }
 
 .contact-section h2 {
-    color: #1f2937 !important;
-    font-weight: bold !important;
+  color: #1f2937 !important;
+  font-weight: bold !important;
 }
 
-/* تثبيت خانة البحث */
+
 .sticky-search-container {
-    position: sticky !important;
-    top: 80px !important;
-    z-index: 40 !important;
-    background-color: #ffffff !important;
-    padding: 1rem 0 !important;
-    margin-bottom: 1rem !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  position: sticky !important;
+  top: 80px !important;
+  z-index: 40 !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 2rem !important;
+  box-shadow: none !important;
 }
 
-/* أنماط السعر المشطوب */
+
 .product-price-old {
-    text-decoration: line-through !important;
-    color: #ef4444 !important;
-    font-size: 0.9em !important;
-    margin-left: 0.5rem !important;
+  text-decoration: line-through !important;
+  color: #ef4444 !important;
+  font-size: 0.9em !important;
+  margin-left: 0.5rem !important;
 }
 
 .product-price-new {
-    color: #10b981 !important;
-    font-weight: bold !important;
+  color: #10b981 !important;
+  font-weight: bold !important;
 }
