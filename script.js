@@ -125,7 +125,7 @@ window.copyToClipboard = (text) => {
 };
 
 
-const MAIN_DEVELOPER_UID = '7NQrCA0mELXyPg9THywemrJ6DS53';
+const MAIN_DEVELOPER_UID = 'Dy8FzUfBn5PraIJpSsdMHoh7Ydw1';
 
 
 let developerUIDs = [MAIN_DEVELOPER_UID];
