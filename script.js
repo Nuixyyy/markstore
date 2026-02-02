@@ -50,7 +50,7 @@ const IMGBB_API_KEY = '2111a1edb12a32e521b454d9fbba6985';
 
 const getProxiedImageUrl = (url) => {
     if (!url) return url;
-    
+
     if (url.includes('i.ibb.co')) {
         return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
     }
@@ -59,7 +59,7 @@ const getProxiedImageUrl = (url) => {
 
 
 const generateProductSKU = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; 
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let sku = '';
     for (let i = 0; i < 6; i++) {
         sku += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -83,7 +83,7 @@ const handleDeepLinking = () => {
         const category = categoriesData.find(cat => cat.name === categoryName);
         if (category) {
             filterProductsByCategory(category.id);
-            
+
             const productsSection = document.getElementById('products');
             if (productsSection) {
                 productsSection.scrollIntoView({ behavior: 'smooth' });
@@ -95,13 +95,13 @@ const handleDeepLinking = () => {
 
 const migrateMissingSKUs = async () => {
     if (!isAdmin || productsData.length === 0) return;
-    
+
     const productsToUpdate = productsData.filter(p => !p.sku);
     if (productsToUpdate.length === 0) return;
-    
+
     console.log(`Migrating ${productsToUpdate.length} products to add SKUs...`);
-    
-    
+
+
     for (const product of productsToUpdate) {
         try {
             const productRef = doc(db, 'products', product.id);
@@ -188,7 +188,7 @@ const alertUserMessage = (message, type = 'info') => {
     if (msgBoxCancelBtn) msgBoxCancelBtn.classList.add('hidden');
 
     if (uiElements.messageBox) {
-        
+
         uiElements.messageBox.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'bg-blue-100', 'bg-yellow-100');
         uiElements.messageBox.classList.add('bg-white');
 
@@ -230,7 +230,7 @@ const showConfirmationMessage = (message) => {
         if (msgBoxConfirmBtn) msgBoxConfirmBtn.classList.remove('hidden');
         if (msgBoxCancelBtn) msgBoxCancelBtn.classList.remove('hidden');
 
-        
+
         if (overlay) overlay.classList.remove('hidden');
 
         if (uiElements.messageBox) {
@@ -323,7 +323,7 @@ const setupRealtimeListeners = () => {
 
     console.log("Setting up real-time listeners for products, categories, reviews, and cart...");
 
-    
+
     if (cartUnsubscribe) {
         cartUnsubscribe();
         cartUnsubscribe = null;
@@ -341,9 +341,9 @@ const setupRealtimeListeners = () => {
         });
         console.log("Products data fetched:", productsData.length);
         displayProducts(productsData);
-        
+
         handleDeepLinking();
-        
+
         migrateMissingSKUs();
     }, (error) => {
         console.error("Error fetching products:", error);
@@ -383,7 +383,7 @@ const setupRealtimeListeners = () => {
         });
         console.log("Reviews data fetched:", reviewsData.length);
         displayReviews(reviewsData);
-       
+
         updateAddReviewButton();
     }, (error) => {
         console.error("Error fetching reviews:", error);
@@ -410,7 +410,7 @@ const setupRealtimeListeners = () => {
         }
     });
 
-   
+
     const featuredColRef = collection(db, `featuredProducts`);
     onSnapshot(featuredColRef, (snapshot) => {
         featuredProductsData = [];
@@ -436,7 +436,7 @@ const setupRealtimeListeners = () => {
 
 const fetchUserProfile = async (uid) => {
     try {
-        
+
         const userDocRef = doc(db, 'users', uid);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -476,7 +476,7 @@ const fetchUserProfile = async (uid) => {
 
 const fetchAdminStatus = async () => {
     try {
-       
+
         if (!userId || !auth || !auth.currentUser) {
             console.log("User not signed in, skipping admin status check.");
             isAdmin = false;
@@ -485,7 +485,7 @@ const fetchAdminStatus = async () => {
             return;
         }
 
-        
+
         if (userId === MAIN_DEVELOPER_UID) {
             developerUIDs = [MAIN_DEVELOPER_UID];
             isAdmin = true;
@@ -497,7 +497,7 @@ const fetchAdminStatus = async () => {
             return;
         }
 
-        
+
         const developersDocRef = doc(db, `settings`, 'developers');
         const developersDocSnap = await getDoc(developersDocRef);
 
@@ -505,18 +505,18 @@ const fetchAdminStatus = async () => {
             const developersData = developersDocSnap.data();
             developerUIDs = developersData.uids || [MAIN_DEVELOPER_UID];
         } else {
-            
+
             await setDoc(developersDocRef, { uids: [MAIN_DEVELOPER_UID] });
             developerUIDs = [MAIN_DEVELOPER_UID];
         }
 
-       
+
         if (developerUIDs.includes(userId)) {
             isAdmin = true;
             if (uiElements.developerButtons) uiElements.developerButtons.classList.remove('hidden');
             if (uiElements.developerStatus) uiElements.developerStatus.classList.remove('hidden');
 
-           
+
             const manageFeaturedBtn = document.getElementById('manage-featured-btn');
             if (manageFeaturedBtn) {
                 manageFeaturedBtn.classList.remove('hidden');
@@ -524,7 +524,7 @@ const fetchAdminStatus = async () => {
 
             console.log("Current user is admin/developer.");
 
-            
+
             const manageDevelopersBtn = document.getElementById('manage-developers-btn');
             if (manageDevelopersBtn) {
                 if (userId === MAIN_DEVELOPER_UID) {
@@ -534,7 +534,7 @@ const fetchAdminStatus = async () => {
                 }
             }
 
-           
+
             setTimeout(() => {
                 fetchAndDisplayUserCount();
             }, 2000);
@@ -543,7 +543,7 @@ const fetchAdminStatus = async () => {
             if (uiElements.developerButtons) uiElements.developerButtons.classList.add('hidden');
             if (uiElements.developerStatus) uiElements.developerStatus.classList.add('hidden');
 
-            
+
             const manageFeaturedBtn = document.getElementById('manage-featured-btn');
             if (manageFeaturedBtn) {
                 manageFeaturedBtn.classList.add('hidden');
@@ -576,8 +576,16 @@ const displayFeaturedProducts = () => {
         const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
         const formattedPrice = Math.round(product.price).toLocaleString('en-US');
 
+        let deleteBtnHtml = '';
+        if (isAdmin) {
+            deleteBtnHtml = `<button onclick="deleteFeaturedProductDirectly('${featuredItem.id}', event)" class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors z-20 shadow-md">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>`;
+        }
+
         const featuredCard = `
-            <div class="featured-product-card" data-product-id="${product.id}">
+            <div class="featured-product-card relative group" data-product-id="${product.id}">
+                ${deleteBtnHtml}
                 <img src="${mainImageUrl || 'https://placehold.co/200x120/f8fafc/666666?text=Product'}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/200x120/f8fafc/666666?text=Product';">
                 <h3>${product.name}</h3>
                 <p>${formattedPrice} د.ع</p>
@@ -586,9 +594,9 @@ const displayFeaturedProducts = () => {
         featuredContainer.insertAdjacentHTML('beforeend', featuredCard);
     });
 
-    
     document.querySelectorAll('.featured-product-card').forEach(card => {
         card.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
             const productId = e.currentTarget.dataset.productId;
             const product = productsData.find(p => p.id === productId);
             if (product) {
@@ -598,13 +606,33 @@ const displayFeaturedProducts = () => {
     });
 };
 
+window.deleteFeaturedProductDirectly = async (featuredDocId, event) => {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    if (!isAdmin) return;
+
+    const confirmed = await showConfirmationMessage("هل أنت متأكد من حذف هذا المنتج من المميزة؟");
+    if (!confirmed) return;
+
+    try {
+        await deleteDoc(doc(db, 'featuredProducts', featuredDocId));
+        alertUserMessage("تم حذف المنتج من المميزة بنجاح", "success");
+    } catch (error) {
+        console.error("Error removing featured product:", error);
+        alertUserMessage("فشل الحذف", "error");
+    }
+};
+
 const openManageFeaturedModal = () => {
     if (!isAdmin) return;
 
     const modal = document.getElementById('manage-featured-modal');
     if (!modal) return;
 
-    
+
     selectedFeaturedProducts = [...featuredProductsData.map(f => f.productId)];
 
     displayCurrentFeaturedProducts();
@@ -648,13 +676,13 @@ const displayAvailableProducts = (searchTerm = '') => {
 
     container.innerHTML = '';
 
-    
+
     let availableProducts = productsData.filter(product =>
         !selectedFeaturedProducts.includes(product.id) &&
         product.availability !== 'sold' &&
-        (searchTerm === '' || 
-         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase())))
+        (searchTerm === '' ||
+            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase())))
     );
 
     if (availableProducts.length === 0) {
@@ -699,13 +727,13 @@ const saveFeaturedProducts = async () => {
     try {
         console.log("Saving featured products:", selectedFeaturedProducts);
 
-       
+
         const featuredColRef = collection(db, 'featuredProducts');
         const existingSnapshot = await getDocs(featuredColRef);
 
         console.log("Existing featured products to delete:", existingSnapshot.docs.length);
 
-        
+
         for (const docToDelete of existingSnapshot.docs) {
             try {
                 await deleteDoc(docToDelete.ref);
@@ -715,7 +743,7 @@ const saveFeaturedProducts = async () => {
             }
         }
 
-        
+
         let successCount = 0;
         for (const productId of selectedFeaturedProducts) {
             try {
@@ -739,7 +767,7 @@ const saveFeaturedProducts = async () => {
             alertUserMessage('فشل في حفظ المنتجات المميزة. تحقق من الأذونات.', 'error');
         }
 
-        
+
         setTimeout(() => {
             const modal = document.getElementById('manage-featured-modal');
             if (modal) modal.classList.add('hidden');
@@ -760,7 +788,7 @@ const findExistingUser = async (fullName, phoneNumber) => {
     try {
         console.log("Searching for existing user with:", { fullName, phoneNumber });
 
-        
+
         const usersColRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersColRef);
 
@@ -771,7 +799,7 @@ const findExistingUser = async (fullName, phoneNumber) => {
 
                 if (userProfileSnap.exists()) {
                     const userData = userProfileSnap.data();
-                   
+
                     if (userData.fullName === fullName && userData.phoneNumber === phoneNumber) {
                         console.log("Found existing user:", userDoc.id);
                         return {
@@ -830,20 +858,20 @@ const fetchAndDisplayUserCount = async () => {
         const usersSnapshot = await getDocs(usersColRef);
         let userCount = 0;
 
-        
+
         for (const userDoc of usersSnapshot.docs) {
             try {
                 const userProfileRef = doc(db, 'users', userDoc.id);
                 const userProfileSnapshot = await getDoc(userProfileRef);
                 if (userProfileSnapshot.exists()) {
                     const userData = userProfileSnapshot.data();
-                    
+
                     if (userData.fullName && userData.phoneNumber) {
                         userCount++;
                     }
                 }
             } catch (profileError) {
-                
+
                 continue;
             }
         }
@@ -864,13 +892,13 @@ const fetchAndDisplayUserCount = async () => {
 
 
 const updateAddReviewButton = () => {
-    
+
     if (!uiElements.addReviewBtn) {
         uiElements.addReviewBtn = document.getElementById('add-review-btn');
     }
 
     if (userId && currentUserProfile) {
-        
+
         if (uiElements.addReviewBtn) {
             uiElements.addReviewBtn.disabled = false;
             uiElements.addReviewBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -878,7 +906,7 @@ const updateAddReviewButton = () => {
             uiElements.addReviewBtn.title = 'إضافة تقييم';
         }
     } else {
-       
+
         if (uiElements.addReviewBtn) {
             uiElements.addReviewBtn.disabled = true;
             uiElements.addReviewBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -895,7 +923,7 @@ const updateUIForLoggedOutUser = () => {
     if (uiElements.developerStatus) uiElements.developerStatus.classList.add('hidden');
     if (uiElements.loginProfileText) uiElements.loginProfileText.textContent = 'تسجيل دخول';
 
-    
+
     const profileIcon = document.getElementById('profile-icon');
     if (profileIcon) profileIcon.classList.add('hidden');
 
@@ -915,7 +943,7 @@ const updateUIForLoggedOutUser = () => {
 
     currentCart = [];
 
-    
+
     updateAddReviewButton();
 };
 
@@ -923,13 +951,13 @@ const updateUIForLoggedOutUser = () => {
 const displayProducts = (products) => {
     console.log("displayProducts: productsData received:", products);
 
-    
+
     if (!uiElements.productsContainer) {
         uiElements.productsContainer = document.getElementById('products-container');
         console.log("Re-fetching productsContainer:", uiElements.productsContainer);
     }
 
-    
+
     if (!uiElements.productsContainer) {
         console.error("Error: productsContainer element not found when trying to display products.");
         console.log("Available elements with 'product' in ID:",
@@ -945,23 +973,23 @@ const displayProducts = (products) => {
         return;
     }
 
-    
+
     const sortedProducts = [...products].sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
         const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-        return dateB - dateA; 
+        return dateB - dateA;
     });
     sortedProducts.forEach(product => {
         const displayPrice = product.discountPrice || product.price;
         const formattedPrice = Math.round(displayPrice).toLocaleString('en-US');
         const oldPriceHtml = product.discountPrice ? `<span class="product-price-old">${Math.round(product.price).toLocaleString('en-US')} د.ع</span>` : '';
-        
+
         const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
 
-        
+
         const freeDeliveryText = product.freeDelivery ? '<p class="text-green-400 text-sm mt-1 font-semibold">توصيل مجاني</p>' : '';
 
-        
+
         let availabilityText = '';
         let buttonsSection = '';
 
@@ -970,7 +998,7 @@ const displayProducts = (products) => {
         } else if (product.availability === 'sold') {
             availabilityText = '<p class="text-red-400 text-sm mt-1 font-semibold">مباع</p>';
         }
-        
+
 
         if (product.availability !== 'sold') {
             buttonsSection = `
@@ -1043,7 +1071,7 @@ const displayProducts = (products) => {
             const productToBuy = productsData.find(p => p.id === productId);
 
             if (productToBuy) {
-                
+
                 const tempCart = [{
                     id: productToBuy.id,
                     productId: productToBuy.id,
@@ -1053,13 +1081,13 @@ const displayProducts = (products) => {
                     quantity: 1
                 }];
 
-               
+
                 orderCartData = [...tempCart];
 
-               
+
                 populateCheckoutModalDirectPurchase(productToBuy);
 
-                
+
                 if (uiElements.checkoutModal) uiElements.checkoutModal.classList.remove('hidden');
             }
         });
@@ -1100,17 +1128,17 @@ const displayProducts = (products) => {
 let productHistory = [];
 
 const openProductDetailPage = (product) => {
-    
+
     productHistory.push(product);
 
-   
+
     if (product.sku) {
         const currentUrl = new URL(window.location.href);
         currentUrl.hash = `product-${product.sku}`;
         window.history.pushState({ sku: product.sku }, '', currentUrl.href);
     }
 
-   
+
     const mainContent = document.querySelector('main');
     const header = document.querySelector('header');
     const bottomNav = document.querySelector('nav');
@@ -1118,7 +1146,7 @@ const openProductDetailPage = (product) => {
     if (mainContent) mainContent.style.display = 'none';
     if (bottomNav) bottomNav.style.display = 'none';
 
-    
+
     let productImages = [];
     if (product.imageUrls && product.imageUrls.length > 0) {
         productImages = product.imageUrls.map(url => getProxiedImageUrl(url));
@@ -1128,7 +1156,7 @@ const openProductDetailPage = (product) => {
         productImages = ['https://placehold.co/600x400/1a012a/ffffff?text=لا توجد صورة'];
     }
 
-    
+
     let statusInfo = '';
     if (product.availability === 'available') {
         statusInfo += '<span class="text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full text-sm">متوفر</span>';
@@ -1139,7 +1167,7 @@ const openProductDetailPage = (product) => {
         statusInfo += ' <span class="text-green-600 font-semibold bg-green-100 px-2 py-1 rounded-full text-sm mr-2">توصيل مجاني</span>';
     }
 
-    
+
     const productSku = product.sku || 'N/A';
     statusInfo += `
         <div class="mt-4 flex items-center gap-2 bg-gray-100 p-2 rounded-lg w-fit border border-gray-200">
@@ -1153,11 +1181,29 @@ const openProductDetailPage = (product) => {
         </div>
     `;
 
-   
+
     let buttonsSection = '';
     if (product.availability !== 'sold') {
+        let adminButtons = '';
+        if (isAdmin) {
+            const isFeatured = featuredProductsData.some(f => f.productId === product.id);
+            const btnText = isFeatured ? 'إزالة من المميزة' : 'إضافة للمميزة';
+            const btnColor = isFeatured ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700';
+            const btnIcon = isFeatured ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>';
+
+            adminButtons = `
+                <button id="admin-toggle-featured-btn" onclick="toggleFeaturedStatus('${product.id}')" class="w-full ${btnColor} text-white py-4 rounded-lg font-semibold transition duration-300 shadow-lg flex items-center justify-center gap-2 mb-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${btnIcon}
+                    </svg>
+                    <span id="admin-featured-btn-text">${btnText}</span>
+                </button>
+             `;
+        }
+
         buttonsSection = `
             <div class="space-y-3 mb-6">
+                ${adminButtons}
                 <button id="product-page-add-to-cart" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 shadow-lg flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"></path>
@@ -1174,7 +1220,7 @@ const openProductDetailPage = (product) => {
         `;
     }
 
-   
+
     let thumbnailsHtml = '';
     productImages.forEach((imageUrl, index) => {
         thumbnailsHtml += `
@@ -1184,7 +1230,7 @@ const openProductDetailPage = (product) => {
         `;
     });
 
-   
+
     const relatedProducts = productsData.filter(p =>
         p.id !== product.id &&
         p.availability !== 'sold' &&
@@ -1212,7 +1258,7 @@ const openProductDetailPage = (product) => {
         `;
     }
 
-    
+
     const productPageHtml = `
         <div id="product-detail-page" class="min-h-screen" style="background-color: #ffffff; color: #333333;">
             <!-- Header with back button - Fixed and Responsive -->
@@ -1284,15 +1330,15 @@ const openProductDetailPage = (product) => {
         </div>
     `;
 
-    
+
     document.body.insertAdjacentHTML('beforeend', productPageHtml);
 
-    
+
     const backToHome = () => {
-        
+
         productHistory.pop();
 
-        
+
         const currentUrl = new URL(window.location.href);
         currentUrl.hash = '';
         window.history.pushState({}, '', currentUrl.href);
@@ -1300,13 +1346,13 @@ const openProductDetailPage = (product) => {
         const productPage = document.getElementById('product-detail-page');
         if (productPage) productPage.remove();
 
-        
+
         if (productHistory.length > 0) {
             const previousProduct = productHistory[productHistory.length - 1];
-            productHistory.pop(); 
+            productHistory.pop();
             openProductDetailPage(previousProduct);
         } else {
-            
+
             if (mainContent) mainContent.style.display = 'block';
             if (bottomNav) bottomNav.style.display = 'block';
         }
@@ -1349,7 +1395,7 @@ const openProductDetailPage = (product) => {
             orderCartData = [...tempCart];
             populateCheckoutModalDirectPurchase(product);
 
-            
+
             const productPage = document.getElementById('product-detail-page');
             if (productPage) productPage.remove();
             if (mainContent) mainContent.style.display = 'block';
@@ -1359,7 +1405,7 @@ const openProductDetailPage = (product) => {
         });
     }
 
-   
+
     window.changeMainImage = (imageUrl, index) => {
         const mainImage = document.getElementById('main-product-image');
         const currentIndex = document.getElementById('current-img-index');
@@ -1372,7 +1418,7 @@ const openProductDetailPage = (product) => {
             currentIndex.textContent = index + 1;
         }
 
-        
+
         thumbnails.forEach((thumb, i) => {
             if (i === index) {
                 thumb.classList.remove('border-gray-300');
@@ -1384,16 +1430,62 @@ const openProductDetailPage = (product) => {
         });
     };
 
-    
+
     window.openRelatedProduct = (productId) => {
         const relatedProduct = productsData.find(p => p.id === productId);
         if (relatedProduct) {
-            
+
             const currentPage = document.getElementById('product-detail-page');
             if (currentPage) currentPage.remove();
 
-            
+
             openProductDetailPage(relatedProduct);
+        }
+    };
+
+    window.toggleFeaturedStatus = async (productId) => {
+        if (!isAdmin) return;
+
+        const isFeatured = featuredProductsData.some(f => f.productId === productId);
+        const btn = document.getElementById('admin-toggle-featured-btn');
+        const btnText = document.getElementById('admin-featured-btn-text');
+
+        if (btn) btn.disabled = true;
+
+        try {
+            if (isFeatured) {
+                const featuredItem = featuredProductsData.find(f => f.productId === productId);
+                if (featuredItem) {
+                    await deleteDoc(doc(db, 'featuredProducts', featuredItem.id));
+                    alertUserMessage('تم إزالة المنتج من المميزة', 'success');
+                }
+            } else {
+                await addDoc(collection(db, 'featuredProducts'), {
+                    productId: productId,
+                    createdAt: new Date().toISOString(),
+                    addedBy: userId
+                });
+                alertUserMessage('تم إضافة المنتج للمميزة', 'success');
+            }
+
+            if (btn) {
+                // Toggle purely visual state optimistically (listener will update real state)
+                if (isFeatured) {
+                    btn.classList.replace('bg-red-600', 'bg-purple-600');
+                    btn.classList.replace('hover:bg-red-700', 'hover:bg-purple-700');
+                    btnText.textContent = 'إضافة للمميزة';
+                } else {
+                    btn.classList.replace('bg-purple-600', 'bg-red-600');
+                    btn.classList.replace('hover:bg-purple-700', 'hover:bg-red-700');
+                    btnText.textContent = 'إزالة من المميزة';
+                }
+            }
+
+        } catch (error) {
+            console.error(error);
+            alertUserMessage('حدث خطأ أثناء التحديث', 'error');
+        } finally {
+            if (btn) btn.disabled = false;
         }
     };
 };
@@ -1424,7 +1516,7 @@ const populateCategoryDropdowns = () => {
         adminButtons.classList.add('flex', 'gap-1', 'ml-2');
 
         if (isAdmin) {
-            
+
             const editBtn = document.createElement('button');
             editBtn.innerHTML = `
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1436,7 +1528,7 @@ const populateCategoryDropdowns = () => {
             editBtn.dataset.categoryName = cat.name;
             editBtn.title = 'تعديل التصنيف';
 
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.innerHTML = `
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1467,13 +1559,13 @@ const populateCategoryDropdowns = () => {
         uiElements.editProductCategorySelect.appendChild(editProductOption);
     });
 
-    
+
     document.querySelectorAll('.category-filter-btn').forEach(filterBtn => {
-        
+
         const clickHandler = (e) => {
             e.stopPropagation();
 
-            
+
             let categoryId = e.target.dataset.categoryId;
             if (!categoryId && e.target.closest('.category-filter-btn')) {
                 categoryId = e.target.closest('.category-filter-btn').dataset.categoryId;
@@ -1487,14 +1579,14 @@ const populateCategoryDropdowns = () => {
 
         filterBtn.addEventListener('click', clickHandler);
 
-       
+
         const spanElement = filterBtn.querySelector('span');
         if (spanElement) {
             spanElement.addEventListener('click', clickHandler);
         }
     });
 
-    
+
     if (isAdmin) {
         document.querySelectorAll('.edit-category-btn').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -1521,7 +1613,7 @@ const filterProductsByCategory = (categoryId) => {
         return categoryId === 'all' || product.category === categoryId;
     });
 
-   
+
     const currentUrl = new URL(window.location.href);
     if (categoryId === 'all') {
         currentUrl.hash = '';
@@ -1533,13 +1625,13 @@ const filterProductsByCategory = (categoryId) => {
     }
     window.history.pushState({ categoryId }, '', currentUrl.href);
 
-    
+
     const bodyElement = document.body;
 
-    
+
     bodyElement.classList.remove('mousepads-category');
 
-   
+
     if (categoryId !== 'all') {
         const category = categoriesData.find(cat => cat.id === categoryId);
         if (category && category.name && category.name.includes('ماوس باد')) {
@@ -1552,7 +1644,7 @@ const filterProductsByCategory = (categoryId) => {
 
 
 const displayCart = () => {
-   
+
     if (!uiElements.cartItemsContainer) {
         uiElements.cartItemsContainer = document.getElementById('cart-items');
     }
@@ -1590,7 +1682,7 @@ const displayCart = () => {
         uiElements.cartSummaryDiv.classList.add('hidden');
         uiElements.checkoutButton.classList.add('hidden');
     } else {
-       
+
         let hasNonFreeDeliveryItems = false;
 
         currentCart.forEach(item => {
@@ -1598,7 +1690,7 @@ const displayCart = () => {
             total += itemTotal;
             itemCount += item.quantity;
 
-            
+
             const productData = productsData.find(p => p.id === item.productId);
             if (productData && !productData.freeDelivery) {
                 hasNonFreeDeliveryItems = true;
@@ -1607,7 +1699,7 @@ const displayCart = () => {
             const formattedItemPrice = Math.round(item.price).toLocaleString('en-US');
             const formattedItemTotal = Math.round(itemTotal).toLocaleString('en-US');
 
-            
+
             const freeDeliveryBadge = (productData && productData.freeDelivery) ?
                 '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded ml-2">توصيل مجاني</span>' : '';
 
@@ -1634,11 +1726,11 @@ const displayCart = () => {
             uiElements.cartItemsContainer.insertAdjacentHTML('beforeend', cartItemHtml);
         });
 
-        
+
         const deliveryFee = hasNonFreeDeliveryItems ? 5000 : 0;
         const grandTotal = total + deliveryFee;
 
-        
+
         let summaryHtml = `
             <div class="flex justify-between items-center text-lg font-semibold">
                 <span>المجموع الفرعي:</span>
@@ -1835,7 +1927,7 @@ const displayDevelopersList = () => {
 const openEditCategoryModal = (categoryId, categoryName) => {
     if (!isAdmin) return;
 
-    
+
     const editCategoryNameInput = document.getElementById('edit-category-name');
     const editCategoryIdInput = document.getElementById('edit-category-id');
     const editCategoryModal = document.getElementById('edit-category-modal');
@@ -1845,7 +1937,7 @@ const openEditCategoryModal = (categoryId, categoryName) => {
         editCategoryNameInput.value = categoryName;
         editCategoryModal.classList.remove('hidden');
     } else {
-        
+
         const newName = prompt(`تعديل اسم التصنيف "${categoryName}":`, categoryName);
         if (newName && newName.trim() && newName.trim() !== categoryName) {
             updateCategory(categoryId, newName.trim());
@@ -1883,7 +1975,7 @@ const deleteCategory = async (categoryId, categoryName) => {
     }
 
     try {
-        
+
         const productsUsingCategory = productsData.filter(product => product.category === categoryId);
         if (productsUsingCategory.length > 0) {
             const forceDelete = await showConfirmationMessage(`يوجد ${productsUsingCategory.length} منتج يستخدم هذا التصنيف. هل تريد المتابعة؟ سيتم تعيين هذه المنتجات كـ "غير مصنف".`);
@@ -1891,7 +1983,7 @@ const deleteCategory = async (categoryId, categoryName) => {
                 return;
             }
 
-           
+
             for (const product of productsUsingCategory) {
                 const productDocRef = doc(db, `products`, product.id);
                 await updateDoc(productDocRef, {
@@ -1904,7 +1996,7 @@ const deleteCategory = async (categoryId, categoryName) => {
         await deleteDoc(categoryDocRef);
         alertUserMessage("تم حذف التصنيف بنجاح.", 'success');
 
-       
+
         if (uiElements.categoriesDropdown) {
             uiElements.categoriesDropdown.classList.add('hidden');
         }
@@ -1928,7 +2020,7 @@ const openEditProductModal = (product) => {
     uiElements.editProductPriceInput.value = product.price;
     uiElements.editProductCategorySelect.value = product.category || '';
 
-   
+
     const hasDiscountCheckbox = document.getElementById('edit-product-has-discount');
     const discountContainer = document.getElementById('edit-product-discount-container');
     const discountPriceInput = document.getElementById('edit-product-discount-price');
@@ -1945,32 +2037,32 @@ const openEditProductModal = (product) => {
         }
     }
 
-   
+
     const editFreeDeliveryCheckbox = document.getElementById('edit-product-free-delivery');
     if (editFreeDeliveryCheckbox) {
         editFreeDeliveryCheckbox.checked = product.freeDelivery || false;
     }
 
-    
+
     const editRemoveWhiteBgCheckbox = document.getElementById('edit-product-remove-white-bg');
     if (editRemoveWhiteBgCheckbox) {
         editRemoveWhiteBgCheckbox.checked = product.removeWhiteBackground || false;
     }
 
-    
+
     const editAvailabilitySelect = document.getElementById('edit-product-availability');
     if (editAvailabilitySelect) {
         editAvailabilitySelect.value = product.availability || '';
     }
 
-    
+
     for (let i = 1; i <= 5; i++) {
         const imageInput = document.getElementById(`edit-product-image-url-${i}`);
         if (imageInput) {
             if (product.imageUrls && product.imageUrls[i - 1]) {
                 imageInput.value = product.imageUrls[i - 1];
             } else if (i === 1 && product.imageUrl) {
-               
+
                 imageInput.value = product.imageUrl;
             } else {
                 imageInput.value = '';
@@ -2005,7 +2097,7 @@ const deleteProduct = async (productId) => {
 
 
 const displayReviews = (reviews) => {
-    
+
     if (!uiElements.reviewsList) {
         uiElements.reviewsList = document.getElementById('reviews-list');
     }
@@ -2070,7 +2162,7 @@ const deleteReview = async (reviewId) => {
     }
 
     try {
-      
+
         const reviewToDelete = reviewsData.find(review => review.id === reviewId);
         if (!reviewToDelete) {
             alertUserMessage("التقييم غير موجود.", 'error');
@@ -2122,10 +2214,10 @@ const populateCheckoutModalDirectPurchase = (product) => {
     const itemTotal = product.price;
     const formattedItemTotal = Math.round(itemTotal).toLocaleString('en-US');
 
-    
+
     const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
 
-  
+
     const freeDeliveryBadge = product.freeDelivery ?
         '<span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded mr-2">توصيل مجاني</span>' : '';
 
@@ -2143,11 +2235,11 @@ const populateCheckoutModalDirectPurchase = (product) => {
     `;
     uiElements.checkoutProductsList.insertAdjacentHTML('beforeend', productItemHtml);
 
-   
+
     const deliveryFee = product.freeDelivery ? 0 : 5000;
     const grandTotal = itemTotal + deliveryFee;
 
-    
+
     let summaryHtml = `
         <div class="border-t border-purple-600 pt-2 mt-2">
             <div class="flex justify-between text-sm">
@@ -2208,7 +2300,7 @@ const populateCheckoutModal = () => {
         const itemTotal = item.price * item.quantity;
         orderSubtotal += itemTotal;
 
-      
+
         const productData = productsData.find(p => p.id === item.productId);
         if (productData && !productData.freeDelivery) {
             hasNonFreeDeliveryItems = true;
@@ -2216,7 +2308,7 @@ const populateCheckoutModal = () => {
 
         const formattedItemTotal = Math.round(itemTotal).toLocaleString('en-US');
 
-      
+
         const freeDeliveryBadge = (productData && productData.freeDelivery) ?
             '<span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded mr-2">توصيل مجاني</span>' : '';
 
@@ -2235,11 +2327,11 @@ const populateCheckoutModal = () => {
         uiElements.checkoutProductsList.insertAdjacentHTML('beforeend', productItemHtml);
     });
 
-    
+
     const deliveryFee = hasNonFreeDeliveryItems ? 5000 : 0;
     const grandTotal = orderSubtotal + deliveryFee;
 
-  
+
     let summaryHtml = `
         <div class="border-t border-purple-600 pt-2 mt-2">
             <div class="flex justify-between text-sm">
@@ -2273,12 +2365,12 @@ const populateCheckoutModal = () => {
 
 const uploadImageToImgBB = async (file) => {
     try {
-      
+
         if (file.size > 10 * 1024 * 1024) {
             throw new Error('حجم الصورة كبير جداً. الحد الأقصى 10 ميجابايت.');
         }
 
-       
+
         if (!file.type.startsWith('image/')) {
             throw new Error('يرجى اختيار ملف صورة فقط.');
         }
@@ -2288,7 +2380,7 @@ const uploadImageToImgBB = async (file) => {
         const formData = new FormData();
         formData.append('image', file);
 
-       
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds 
 
@@ -2302,7 +2394,7 @@ const uploadImageToImgBB = async (file) => {
         } catch (fetchError) {
             clearTimeout(timeoutId);
 
-            
+
             if (fetchError.name === 'AbortError') {
                 throw new Error('انتهت مهلة رفع الصورة (90 ثانية). قد يكون الاتصال ضعيفاً، حاول مرة أخرى أو استخدم صورة أصغر.');
             } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
@@ -2324,7 +2416,7 @@ const uploadImageToImgBB = async (file) => {
         console.log('ImgBB Response:', data);
 
         if (data.success && data.data) {
-           
+
             const imageUrl = data.data.display_url || data.data.url;
             console.log('Image uploaded successfully:', imageUrl);
             return imageUrl;
@@ -2335,7 +2427,7 @@ const uploadImageToImgBB = async (file) => {
     } catch (error) {
         console.error('Error uploading image:', error);
 
-        
+
         if (error.message.includes('حجم الصورة')) {
             throw error;
         } else if (error.message.includes('ملف صورة')) {
@@ -2362,7 +2454,7 @@ const handleProductImageUpload = async (imageIndex) => {
     const file = fileInput.files[0];
 
     try {
-        
+
         if (preview) preview.classList.add('hidden');
         if (progress) {
             progress.classList.remove('hidden');
@@ -2370,19 +2462,19 @@ const handleProductImageUpload = async (imageIndex) => {
             if (progressBar) progressBar.style.width = '30%';
         }
 
-       
+
         const imageUrl = await uploadImageToImgBB(file);
 
-        
+
         if (progress) {
             const progressBar = progress.querySelector('.bg-blue-600');
             if (progressBar) progressBar.style.width = '100%';
         }
 
-        
+
         if (urlInput) urlInput.value = imageUrl;
 
-        
+
         setTimeout(() => {
             if (progress) progress.classList.add('hidden');
             if (preview) {
@@ -2396,10 +2488,10 @@ const handleProductImageUpload = async (imageIndex) => {
         console.error('Error in handleProductImageUpload:', error);
         alertUserMessage(error.message || 'فشل رفع الصورة', 'error');
 
-        
+
         if (progress) progress.classList.add('hidden');
 
-        
+
         fileInput.value = '';
     }
 };
@@ -2436,7 +2528,7 @@ const setupEventListeners = () => {
         });
     });
 
-    
+
     if (uiElements.messageBoxConfirmBtn) {
         uiElements.messageBoxConfirmBtn.addEventListener('click', () => {
             if (resolveMessageBoxPromise) {
@@ -2460,11 +2552,11 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.loginProfileBtn) {
         uiElements.loginProfileBtn.addEventListener('click', () => {
             if (currentUserProfile) {
-                
+
                 uiElements.loginProfileBtn.innerHTML = '<img id="profile-icon" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" class="w-6 h-6">';
                 if (uiElements.profileDetailsModal) uiElements.profileDetailsModal.classList.remove('hidden');
             } else {
@@ -2473,23 +2565,23 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const searchInput = document.getElementById('main-search-input');
     const suggestionsContainer = document.getElementById('search-suggestions');
 
     if (searchInput && suggestionsContainer) {
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.trim().toLowerCase();
-            
+
             if (searchTerm.length < 1) {
                 suggestionsContainer.innerHTML = '';
                 suggestionsContainer.classList.add('hidden');
-                displayProducts(productsData); 
+                displayProducts(productsData);
                 return;
             }
 
-            const filteredProducts = productsData.filter(p => 
-                p.name.toLowerCase().includes(searchTerm) || 
+            const filteredProducts = productsData.filter(p =>
+                p.name.toLowerCase().includes(searchTerm) ||
                 (p.sku && p.sku.toLowerCase().includes(searchTerm))
             );
 
@@ -2498,7 +2590,7 @@ const setupEventListeners = () => {
                 filteredProducts.slice(0, 6).forEach(product => {
                     const price = product.discountPrice || product.price;
                     const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
-                    
+
                     const suggestionHtml = `
                         <div class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors" data-sku="${product.sku}">
                             <img src="${mainImageUrl}" alt="${product.name}" class="w-12 h-12 object-contain rounded bg-gray-50">
@@ -2516,7 +2608,7 @@ const setupEventListeners = () => {
 
                 suggestionsContainer.classList.remove('hidden');
 
-                
+
                 suggestionsContainer.querySelectorAll('div[data-sku]').forEach(div => {
                     div.addEventListener('click', () => {
                         const sku = div.dataset.sku;
@@ -2533,11 +2625,11 @@ const setupEventListeners = () => {
                 suggestionsContainer.classList.remove('hidden');
             }
 
-            
+
             displayProducts(filteredProducts);
         });
 
-        
+
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
                 suggestionsContainer.classList.add('hidden');
@@ -2545,10 +2637,10 @@ const setupEventListeners = () => {
         });
     }
 
-    
-    let isLoginMode = true; 
 
-    
+    let isLoginMode = true;
+
+
     const authTypeSelection = document.getElementById('auth-type-selection');
     const authFormContainer = document.getElementById('auth-form-container');
     const selectLoginBtn = document.getElementById('select-login-btn');
@@ -2562,7 +2654,7 @@ const setupEventListeners = () => {
     const fullNameError = document.getElementById('full-name-error');
     const phoneNumberError = document.getElementById('phone-number-error');
 
-    
+
     const convertArabicToEnglish = (str) => {
         const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
         const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -2573,11 +2665,11 @@ const setupEventListeners = () => {
         return result;
     };
 
-    
+
     const validateForm = () => {
         let isValid = true;
 
-        
+
         if (fullNameError) {
             fullNameError.classList.add('hidden');
             fullNameError.textContent = '';
@@ -2587,7 +2679,7 @@ const setupEventListeners = () => {
             phoneNumberError.textContent = '';
         }
 
-        
+
         const fullName = fullNameInput ? fullNameInput.value.trim() : '';
         if (!fullName) {
             if (fullNameError) {
@@ -2609,7 +2701,7 @@ const setupEventListeners = () => {
             isValid = false;
         }
 
-        
+
         let phoneNumberDigits = phoneNumberInput ? phoneNumberInput.value.trim() : '';
         if (!phoneNumberDigits) {
             if (phoneNumberError) {
@@ -2618,12 +2710,12 @@ const setupEventListeners = () => {
             }
             isValid = false;
         } else {
-            
+
             phoneNumberDigits = convertArabicToEnglish(phoneNumberDigits);
-           
+
             phoneNumberDigits = phoneNumberDigits.replace(/\D/g, '');
 
-            
+
             if (phoneNumberDigits.length !== 10 && phoneNumberDigits.length !== 11) {
                 if (phoneNumberError) {
                     phoneNumberError.textContent = 'رقم الهاتف يجب أن يكون 10 أو 11 رقمًا';
@@ -2642,13 +2734,13 @@ const setupEventListeners = () => {
         return { isValid, fullName, phoneNumberDigits };
     };
 
-    
+
     const showAuthForm = (mode) => {
         isLoginMode = mode;
         if (authTypeSelection) authTypeSelection.classList.add('hidden');
         if (authFormContainer) authFormContainer.classList.remove('hidden');
 
-        
+
         if (isLoginMode) {
             if (loginTabBtn) {
                 loginTabBtn.classList.remove('bg-gray-600');
@@ -2674,7 +2766,7 @@ const setupEventListeners = () => {
         }
     };
 
-    
+
     if (selectLoginBtn) {
         selectLoginBtn.addEventListener('click', () => showAuthForm(true));
     }
@@ -2682,7 +2774,7 @@ const setupEventListeners = () => {
         selectRegisterBtn.addEventListener('click', () => showAuthForm(false));
     }
 
-    
+
     if (loginTabBtn && registerTabBtn) {
         loginTabBtn.addEventListener('click', () => {
             isLoginMode = true;
@@ -2705,7 +2797,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const loginModal = document.getElementById('login-modal');
     if (loginModal) {
         const modalCloseBtn = loginModal.querySelector('.modal-close-btn');
@@ -2720,7 +2812,7 @@ const setupEventListeners = () => {
         }
     }
 
-   
+
     if (uiElements.loginForm) {
         uiElements.loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2729,7 +2821,7 @@ const setupEventListeners = () => {
                 return;
             }
 
-           
+
             const validation = validateForm();
             if (!validation.isValid) {
                 return;
@@ -2743,18 +2835,18 @@ const setupEventListeners = () => {
 
             try {
                 if (isLoginMode) {
-                   
+
                     const existingUser = await findExistingUser(fullName, fullPhoneNumber);
 
                     if (existingUser) {
-                        
+
                         console.log("Existing user found, logging in:", existingUser.userId);
 
-                        
+
                         const existingUserId = existingUser.userId;
                         currentUserProfile = existingUser.data;
 
-                        
+
                         if (uiElements.profileDetailsName) uiElements.profileDetailsName.textContent = existingUser.data.fullName || 'مستخدم';
                         if (uiElements.profileDetailsPhone) uiElements.profileDetailsPhone.textContent = existingUser.data.phoneNumber || 'N/A';
                         if (uiElements.profileDetailsImage) uiElements.profileDetailsImage.src = existingUser.data.profilePicUrl || 'https://placehold.co/100x100/eeeeee/333333?text=User';
@@ -2764,11 +2856,11 @@ const setupEventListeners = () => {
                             if (uiElements.profileDetailsRegisteredDate) uiElements.profileDetailsRegisteredDate.textContent = `تاريخ التسجيل: ${date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })} في ${date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
                         }
 
-                       
+
                         setupRealtimeListeners();
                         alertUserMessage(`مرحباً بعودتك ${existingUser.data.fullName}! تم تسجيل دخولك بنجاح.`, 'success');
 
-                      
+
                         setTimeout(() => {
                             if (uiElements.loginModal) uiElements.loginModal.classList.add('hidden');
                             if (authTypeSelection) authTypeSelection.classList.remove('hidden');
@@ -2782,14 +2874,14 @@ const setupEventListeners = () => {
                         return;
                     }
                 } else {
-                   
+
                     const phoneExists = await checkPhoneExists(fullPhoneNumber);
                     if (phoneExists) {
                         alertUserMessage('رقم الهاتف مسجل مسبقاً. يرجى استخدام رقم آخر أو تسجيل الدخول.', 'error');
                         return;
                     }
 
-                   
+
                     if (!userId) {
                         if (!auth.currentUser) {
                             await signInAnonymously(auth);
@@ -2827,9 +2919,9 @@ const setupEventListeners = () => {
                     currentUserProfile = updatedProfileSnap.data();
                 }
 
-               
+
                 if (developerUIDs.includes(userId)) {
-                  
+
                     isAdmin = true;
                     if (uiElements.developerButtons) uiElements.developerButtons.classList.remove('hidden');
                     if (uiElements.developerStatus) uiElements.developerStatus.classList.remove('hidden');
@@ -2838,15 +2930,15 @@ const setupEventListeners = () => {
 
                 await fetchAdminStatus();
 
-                
+
                 uiElements.loginProfileBtn.innerHTML = '<img id="profile-icon" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" class="w-6 h-6">';
 
-                
+
                 if (uiElements.loginProfileText) uiElements.loginProfileText.textContent = 'حسابي';
                 if (uiElements.profileDetailsLogoutBtn) uiElements.profileDetailsLogoutBtn.classList.remove('hidden');
                 if (uiElements.profileDetailsLoginBtn) uiElements.profileDetailsLoginBtn.classList.add('hidden');
 
-               
+
                 if (developerUIDs.includes(userId)) {
                     setTimeout(() => {
                         const adminType = userId === MAIN_DEVELOPER_UID ? 'المطور الرئيسي' : 'مطور';
@@ -2880,11 +2972,11 @@ const setupEventListeners = () => {
         });
     }
 
-   
+
     if (uiElements.profileDetailsLogoutBtn) {
         uiElements.profileDetailsLogoutBtn.addEventListener('click', async () => {
             try {
-               
+
                 if (cartUnsubscribe) {
                     cartUnsubscribe();
                     cartUnsubscribe = null;
@@ -2895,25 +2987,25 @@ const setupEventListeners = () => {
                 }
 
                 if (userId) {
-                   
+
                     currentCart = [];
                     currentUserProfile = null;
                     isAdmin = false;
 
-                   
+
                     if (uiElements.developerButtons) uiElements.developerButtons.classList.add('hidden');
                     if (uiElements.developerStatus) uiElements.developerStatus.classList.add('hidden');
                 }
 
-                
+
                 await signOut(auth);
                 console.log("User signed out.");
 
-                
+
                 uiElements.loginProfileBtn.textContent = 'حسابي';
                 if (uiElements.profileDetailsModal) uiElements.profileDetailsModal.classList.add('hidden');
 
-               
+
                 userId = null;
             }
             catch (error) {
@@ -2929,14 +3021,14 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.headerCartBtn) {
         uiElements.headerCartBtn.addEventListener('click', () => {
             if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.remove('hidden');
         });
     }
 
-    
+
     if (uiElements.addToCartDetailBtn) {
         uiElements.addToCartDetailBtn.addEventListener('click', async () => {
             const productId = uiElements.addToCartDetailBtn.dataset.productId;
@@ -2950,7 +3042,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.buyNowDetailBtn) {
         uiElements.buyNowDetailBtn.addEventListener('click', async () => {
             if (!userId || !currentUserProfile) {
@@ -2962,10 +3054,10 @@ const setupEventListeners = () => {
             const productToBuy = productsData.find(p => p.id === productId);
 
             if (productToBuy) {
-               
+
                 const mainImageUrl = (productToBuy.imageUrls && productToBuy.imageUrls.length > 0) ? productToBuy.imageUrls[0] : productToBuy.imageUrl;
 
-               
+
                 const tempCart = [{
                     id: productToBuy.id,
                     productId: productToBuy.id,
@@ -2975,20 +3067,20 @@ const setupEventListeners = () => {
                     quantity: 1
                 }];
 
-                
+
                 orderCartData = [...tempCart];
 
-                
+
                 populateCheckoutModalDirectPurchase(productToBuy);
 
-                
+
                 if (uiElements.productDetailModal) uiElements.productDetailModal.classList.add('hidden');
                 if (uiElements.checkoutModal) uiElements.checkoutModal.classList.remove('hidden');
             }
         });
     }
 
-    
+
     if (uiElements.checkoutButton) {
         uiElements.checkoutButton.addEventListener('click', async () => {
             if (!userId || !currentUserProfile) {
@@ -3000,7 +3092,7 @@ const setupEventListeners = () => {
                 return;
             }
 
-            
+
             orderCartData = [...currentCart];
 
             populateCheckoutModal();
@@ -3008,7 +3100,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.checkoutForm) {
         uiElements.checkoutForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -3032,7 +3124,7 @@ const setupEventListeners = () => {
             }
 
             try {
-                
+
                 const cartToProcess = orderCartData.length > 0 ? orderCartData : currentCart;
 
                 if (cartToProcess.length === 0) {
@@ -3040,12 +3132,12 @@ const setupEventListeners = () => {
                     return;
                 }
 
-                
+
                 const orderId = `order_${Date.now()}_${userId}`;
-                
-                const shortOrderId = orderId.substring(6, 20); 
-                const shortUserId = userId.substring(0, 8); 
-                const callbackData = `rev_${shortOrderId}_${shortUserId}`; 
+
+                const shortOrderId = orderId.substring(6, 20);
+                const shortUserId = userId.substring(0, 8);
+                const callbackData = `rev_${shortOrderId}_${shortUserId}`;
                 const orderData = {
                     orderId: orderId,
                     userId: userId,
@@ -3060,12 +3152,12 @@ const setupEventListeners = () => {
                         price: item.price,
                         quantity: item.quantity
                     })),
-                    status: 'received', 
+                    status: 'received',
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
 
-               
+
                 let cartTotalForBot = 0;
                 let hasNonFreeDeliveryItems = false;
                 cartToProcess.forEach((item) => {
@@ -3079,13 +3171,13 @@ const setupEventListeners = () => {
                 orderData.total = cartTotalForBot + deliveryFee;
                 orderData.deliveryFee = deliveryFee;
 
-                
+
                 orderData.callbackData = callbackData;
 
-                
+
                 const orderDocRef = await addDoc(collection(db, `users/${userId}/orders`), orderData);
 
-                
+
                 const orderImages = [];
                 for (const item of cartToProcess) {
                     const productData = productsData.find(p => p.id === item.productId);
@@ -3099,17 +3191,17 @@ const setupEventListeners = () => {
                     }
                 }
 
-                
+
                 let fields = [];
 
-                
+
                 fields.push({
                     name: '👤 معلومات العميل',
                     value: `**الاسم:** ${fullName}\n**رقم الهاتف:** ${fullPhoneNumber}\n**المحافظة:** ${governorate}\n**القضاء/المدينة:** ${district}`,
                     inline: false
                 });
 
-                
+
                 if (notes) {
                     fields.push({
                         name: '📝 ملاحظات',
@@ -3118,7 +3210,7 @@ const setupEventListeners = () => {
                     });
                 }
 
-                
+
                 let userDetails = `**UID:** ${userId}`;
                 if (currentUserProfile) {
                     userDetails += `\n**الاسم المسجل:** ${currentUserProfile.fullName}\n**الهاتف المسجل:** ${currentUserProfile.phoneNumber}`;
@@ -3129,7 +3221,7 @@ const setupEventListeners = () => {
                     inline: false
                 });
 
-               
+
                 let productsList = '';
                 cartToProcess.forEach((item, index) => {
                     const productData = productsData.find(p => p.id === item.productId);
@@ -3142,7 +3234,7 @@ const setupEventListeners = () => {
                     inline: false
                 });
 
-                
+
                 let financialDetails = `**المجموع الفرعي:** ${Math.round(cartTotalForBot).toLocaleString('en-US')} د.ع\n`;
                 if (hasNonFreeDeliveryItems) {
                     financialDetails += `**التوصيل:** 5,000 د.ع\n`;
@@ -3157,7 +3249,7 @@ const setupEventListeners = () => {
                     inline: false
                 });
 
-                
+
                 const confirmUrl = `${window.location.origin}/#confirm-${orderDocRef.id}`;
                 fields.push({
                     name: '🔗 تأكيد الطلب',
@@ -3165,10 +3257,10 @@ const setupEventListeners = () => {
                     inline: false
                 });
 
-                
+
                 const embed = {
                     title: '✅ طلب جديد!',
-                    color: 5763719, 
+                    color: 5763719,
                     timestamp: new Date().toISOString(),
                     fields: fields,
                     footer: {
@@ -3176,19 +3268,19 @@ const setupEventListeners = () => {
                     }
                 };
 
-                
+
                 if (orderImages.length > 0) {
                     embed.image = {
                         url: orderImages[0]
                     };
                 }
 
-                
-                try {
-                    
-                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@973658542122893402>`, [embed]);
 
-                    
+                try {
+
+                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@1385265431354540204>`, [embed]);
+
+
                     if (orderImages.length > 1) {
                         for (let i = 1; i < Math.min(orderImages.length, 5); i++) {
                             const imageEmbed = {
@@ -3205,12 +3297,12 @@ const setupEventListeners = () => {
                     if (uiElements.checkoutModal) uiElements.checkoutModal.classList.add('hidden');
                     if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.add('hidden');
 
-                    
+
                     orderCartData = [];
 
-                    
+
                     const shouldClearCart = cartToProcess.length > 0 &&
-                        cartToProcess[0].id !== undefined; 
+                        cartToProcess[0].id !== undefined;
 
                     if (shouldClearCart) {
                         try {
@@ -3228,10 +3320,10 @@ const setupEventListeners = () => {
                                 });
                                 await Promise.all(deleteCartPromises);
 
-                                
+
                                 currentCart = [];
 
-                                
+
                                 displayCart();
 
                                 console.log("Cart cleared successfully after order.");
@@ -3239,7 +3331,7 @@ const setupEventListeners = () => {
                         } catch (cartError) {
                             console.error("Error clearing cart:", cartError);
                             console.error("Cart error details:", cartError.message);
-                            
+
                         }
                     } else {
                         console.log("Skipping cart clear (Buy Now order).");
@@ -3249,12 +3341,12 @@ const setupEventListeners = () => {
                     console.error("Discord Webhook Error:", discordError);
                     alertUserMessage('تم حفظ الطلب ولكن فشل إرسال الإشعار. سيتم مراجعة طلبك من لوحة التحكم.', 'warning');
 
-                    
+
                     if (uiElements.checkoutModal) uiElements.checkoutModal.classList.add('hidden');
                     if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.add('hidden');
                     orderCartData = [];
 
-                    
+
                     const shouldClearCart = cartToProcess.length > 0 &&
                         cartToProcess[0].id !== undefined;
 
@@ -3271,10 +3363,10 @@ const setupEventListeners = () => {
                                 });
                                 await Promise.all(deleteCartPromises);
 
-                               
+
                                 currentCart = [];
 
-                               
+
                                 displayCart();
 
                                 console.log("Cart cleared after order (despite Discord error).");
@@ -3292,7 +3384,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.bottomAddProductBtn) {
         uiElements.bottomAddProductBtn.addEventListener('click', () => {
             if (isAdmin) {
@@ -3314,7 +3406,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.addProductForm) {
         uiElements.addProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -3330,7 +3422,7 @@ const setupEventListeners = () => {
             const removeWhiteBackground = document.getElementById('product-remove-white-bg').checked;
             const availability = document.getElementById('product-availability').value;
 
-            
+
             const imageUrls = [];
             for (let i = 1; i <= 5; i++) {
                 const imageInput = document.getElementById(`product-image-url-${i}`);
@@ -3339,7 +3431,7 @@ const setupEventListeners = () => {
                 }
             }
 
-            
+
             if (imageUrls.length === 0) {
                 alertUserMessage('الرجاء رفع صورة واحدة على الأقل للمنتج.', 'error');
                 return;
@@ -3356,22 +3448,22 @@ const setupEventListeners = () => {
                     name,
                     description,
                     price,
-                    imageUrls, 
-                    imageUrl: imageUrls[0], 
+                    imageUrls,
+                    imageUrl: imageUrls[0],
                     category,
                     freeDelivery,
                     removeWhiteBackground,
                     availability: availability || '',
-                    sku: generateProductSKU(), 
+                    sku: generateProductSKU(),
                     createdAt: new Date().toISOString()
                 });
                 console.log("Product successfully added to Firestore with ID:", docRef.id);
                 alertUserMessage('تم إضافة المنتج بنجاح!', 'success');
 
-                
+
                 if (uiElements.addProductForm) uiElements.addProductForm.reset();
 
-                
+
                 for (let i = 1; i <= 5; i++) {
                     window.clearProductImage(i);
                 }
@@ -3386,7 +3478,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     for (let i = 1; i <= 5; i++) {
         const fileInput = document.getElementById(`product-image-file-${i}`);
         if (fileInput) {
@@ -3396,7 +3488,7 @@ const setupEventListeners = () => {
         }
     }
 
-    
+
     if (uiElements.bottomAddCategoryBtn) {
         uiElements.bottomAddCategoryBtn.addEventListener('click', () => {
             if (isAdmin) {
@@ -3409,7 +3501,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const manageDevelopersBtn = document.getElementById('manage-developers-btn');
     if (manageDevelopersBtn) {
         manageDevelopersBtn.addEventListener('click', () => {
@@ -3425,7 +3517,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const addDeveloperForm = document.getElementById('add-developer-form');
     if (addDeveloperForm) {
         addDeveloperForm.addEventListener('submit', async (e) => {
@@ -3436,7 +3528,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const manageFeaturedBtn = document.getElementById('manage-featured-btn');
     if (manageFeaturedBtn) {
         manageFeaturedBtn.addEventListener('click', openManageFeaturedModal);
@@ -3454,7 +3546,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.editCategoryForm) {
         uiElements.editCategoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -3477,7 +3569,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.addCategoryForm) {
         uiElements.addCategoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -3508,7 +3600,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.editProductForm) {
         uiElements.editProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -3525,7 +3617,7 @@ const setupEventListeners = () => {
             const removeWhiteBackground = document.getElementById('edit-product-remove-white-bg').checked;
             const availability = document.getElementById('edit-product-availability').value;
 
-            
+
             const hasDiscount = document.getElementById('edit-product-has-discount').checked;
             const discountPriceInput = document.getElementById('edit-product-discount-price');
             let discountPrice = null;
@@ -3538,7 +3630,7 @@ const setupEventListeners = () => {
                 }
             }
 
-            
+
             const imageUrls = [];
             for (let i = 1; i <= 5; i++) {
                 const imageInput = document.getElementById(`edit-product-image-url-${i}`);
@@ -3558,15 +3650,15 @@ const setupEventListeners = () => {
                     name,
                     description,
                     price,
-                    imageUrls, 
-                    imageUrl: imageUrls[0], 
+                    imageUrls,
+                    imageUrl: imageUrls[0],
                     category,
                     freeDelivery,
                     removeWhiteBackground,
                     availability: availability || ''
                 };
 
-                
+
                 if (hasDiscount && discountPrice !== null) {
                     updateData.discountPrice = discountPrice;
                 } else {
@@ -3585,7 +3677,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.bottomReviewsBtn) {
         uiElements.bottomReviewsBtn.addEventListener('click', () => {
             if (uiElements.reviewsModal) uiElements.reviewsModal.classList.remove('hidden');
@@ -3651,7 +3743,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const performSearch = () => {
         const query = uiElements.mainSearchInput.value.toLowerCase().trim();
         const filtered = productsData.filter(product =>
@@ -3670,7 +3762,7 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.bottomCategoriesBtn) {
         uiElements.bottomCategoriesBtn.addEventListener('click', () => {
             if (uiElements.categoriesDropdown) {
@@ -3679,20 +3771,20 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     if (uiElements.bottomHomeBtn) {
         uiElements.bottomHomeBtn.addEventListener('click', () => {
             document.getElementById('top').scrollIntoView({ behavior: 'smooth' });
 
-            
+
             const bodyElement = document.body;
             bodyElement.classList.remove('mousepads-category');
 
-            displayProducts(productsData); 
+            displayProducts(productsData);
         });
     }
 
-    
+
     const bottomOrdersBtn = document.getElementById('bottom-orders-btn');
     const ordersTrackingModal = document.getElementById('orders-tracking-modal');
     const ordersList = document.getElementById('orders-list');
@@ -3711,11 +3803,11 @@ const setupEventListeners = () => {
         });
     }
 
-    
+
     const displayOrders = async () => {
         if (!ordersList || !userId) return;
 
-        
+
         if (ordersUnsubscribe) {
             ordersUnsubscribe();
             ordersUnsubscribe = null;
@@ -3724,12 +3816,12 @@ const setupEventListeners = () => {
         try {
             const ordersRef = collection(db, `users/${userId}/orders`);
 
-            
+
             if (ordersUnsubscribe) {
                 ordersUnsubscribe();
             }
 
-            
+
             ordersUnsubscribe = onSnapshot(ordersRef, (ordersSnapshot) => {
                 if (ordersSnapshot.empty) {
                     ordersList.innerHTML = '<p class="text-center text-white">لا توجد طلبات حالياً</p>';
@@ -3742,7 +3834,7 @@ const setupEventListeners = () => {
                     orders.push({ id: doc.id, ...doc.data() });
                 });
 
-                
+
                 orders.sort((a, b) => {
                     const dateA = new Date(a.createdAt || 0);
                     const dateB = new Date(b.createdAt || 0);
@@ -3802,14 +3894,14 @@ const setupEventListeners = () => {
 
     const getStatusColor = (status) => {
         const colorMap = {
-            'received': '#3b82f6',      
-            'confirmed': '#10b981',     
-            'reviewed': '#8b5cf6'       
+            'received': '#3b82f6',
+            'confirmed': '#10b981',
+            'reviewed': '#8b5cf6'
         };
         return colorMap[status] || '#6b7280';
     };
 
-    
+
     const hasDiscountCheckbox = document.getElementById('edit-product-has-discount');
     const discountContainer = document.getElementById('edit-product-discount-container');
 
@@ -3869,7 +3961,7 @@ const handleTelegramCallback = async (callbackQuery) => {
             return { success: false, error: 'Invalid callback data' };
         }
 
-        
+
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3879,7 +3971,7 @@ const handleTelegramCallback = async (callbackQuery) => {
             })
         });
 
-        
+
         const usersColRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersColRef);
 
@@ -3890,9 +3982,9 @@ const handleTelegramCallback = async (callbackQuery) => {
 
             for (const orderDoc of ordersSnapshot.docs) {
                 const orderData = orderDoc.data();
-                
+
                 if (orderData.callbackData === callbackData) {
-                    
+
                     const orderDocId = orderDoc.id;
                     const orderRef = doc(db, `users/${userUid}/orders`, orderDocId);
                     await updateDoc(orderRef, {
@@ -3900,7 +3992,7 @@ const handleTelegramCallback = async (callbackQuery) => {
                         updatedAt: new Date().toISOString()
                     });
 
-                    
+
                     const updatedMessage = originalMessageText + '\n\n✅ *تم مراجعة طلبك وسيصلك الطلب خلال وقت محدد*';
 
                     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
@@ -3922,7 +4014,7 @@ const handleTelegramCallback = async (callbackQuery) => {
                         })
                     });
 
-                    
+
                     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3952,7 +4044,7 @@ window.handleTelegramCallback = handleTelegramCallback;
 
 
 window.onload = async () => {
-    
+
     await new Promise(resolve => {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', resolve);
@@ -3961,19 +4053,19 @@ window.onload = async () => {
         }
     });
 
-    
+
     uiElements = {
-       
+
         loginProfileBtn: getUiElement('login-profile-btn'),
         loginProfileText: getUiElement('login-profile-text'),
         headerCartBtn: getUiElement('header-cart-btn'),
         headerCartCount: getUiElement('header-cart-count'),
         mainSearchInput: getUiElement('main-search-input'),
 
-        
+
         productsContainer: getUiElement('products-container'),
 
-        
+
         loginModal: getUiElement('login-modal'),
         loginForm: getUiElement('login-form'),
         fullNameInput: getUiElement('full-name'),
@@ -3999,7 +4091,7 @@ window.onload = async () => {
 
         productDetailModal: getUiElement('product-detail-modal'),
         productDetailName: getUiElement('product-detail-name'),
-        
+
         productDetailCategory: getUiElement('product-detail-category'),
         productDetailDescription: getUiElement('product-detail-description'),
         productDetailPrice: getUiElement('product-detail-price'),
@@ -4034,7 +4126,7 @@ window.onload = async () => {
         productNameInput: getUiElement('product-name'),
         productDescriptionInput: getUiElement('product-description'),
         productPriceInput: getUiElement('product-price'),
-        
+
         productCategorySelect: getUiElement('product-category'),
         addProductMessage: getUiElement('add-product-message'),
 
@@ -4044,7 +4136,7 @@ window.onload = async () => {
         editProductNameInput: getUiElement('edit-product-name'),
         editProductDescriptionInput: getUiElement('edit-product-description'),
         editProductPriceInput: getUiElement('edit-product-price'),
-        
+
         editProductCategorySelect: getUiElement('edit-product-category'),
         editProductMessage: getUiElement('edit-product-message'),
 
@@ -4059,7 +4151,7 @@ window.onload = async () => {
         reviewRatingDisplay: getUiElement('review-rating-display'),
         addReviewMessage: getUiElement('add-review-message'),
 
-        
+
         bottomHomeBtn: getUiElement('bottom-home-btn'),
         bottomCategoriesBtn: getUiElement('bottom-categories-btn'),
         categoriesDropdown: getUiElement('categories-dropdown'),
@@ -4069,14 +4161,14 @@ window.onload = async () => {
         bottomAddProductBtn: getUiElement('bottom-add-product-btn'),
         manageDevelopersBtn: getUiElement('manage-developers-btn'),
 
-        
+
         messageBox: getUiElement('message-box'),
         messageBoxText: getUiElement('message-box-text'),
         messageBoxConfirmBtn: getUiElement('message-box-confirm'),
         messageBoxCancelBtn: getUiElement('message-box-cancel'),
     };
 
-    
+
     if (uiElements.checkoutGovernorateSelect) {
         iraqiGovernorates.forEach(gov => {
             const option = document.createElement('option');
@@ -4086,14 +4178,14 @@ window.onload = async () => {
         });
     }
 
-    
+
     for (let i = 1; i <= 5; i++) {
         const fileInput = document.getElementById(`product-image-file-${i}`);
         if (fileInput) {
             fileInput.addEventListener('change', () => handleProductImageUpload(i));
         }
 
-        
+
         const editFileInput = document.getElementById(`edit-product-image-file-${i}`);
         if (editFileInput) {
             editFileInput.addEventListener('change', () => handleProductImageUpload(i));
@@ -4107,29 +4199,29 @@ window.onload = async () => {
 
 
 window.addEventListener('load', async () => {
-    
+
     await firebaseReadyPromise;
 
     const hash = window.location.hash;
     if (hash.startsWith('#confirm-')) {
         const orderDocId = hash.replace('#confirm-', '');
 
-        
+
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        
+
         if (!isAdmin) {
             alertUserMessage('ليس لديك صلاحية لتأكيد الطلبات.', 'error');
             window.location.hash = '';
             return;
         }
 
-        
+
         const confirmed = await showConfirmationMessage('هل تريد تأكيد هذا الطلب؟');
 
         if (confirmed) {
             try {
-                
+
                 const usersColRef = collection(db, 'users');
                 const usersSnapshot = await getDocs(usersColRef);
 
@@ -4144,14 +4236,14 @@ window.addEventListener('load', async () => {
                         if (orderSnap.exists()) {
                             const orderData = orderSnap.data();
 
-                            
+
                             if (orderData.status === 'confirmed') {
                                 alertUserMessage('هذا الطلب تم تأكيده مسبقاً!', 'warning');
                                 window.location.hash = '';
                                 return;
                             }
 
-                            
+
                             await updateDoc(orderRef, {
                                 status: 'confirmed',
                                 confirmedAt: new Date().toISOString(),
@@ -4164,10 +4256,10 @@ window.addEventListener('load', async () => {
 
                             alertUserMessage('✅ تم تأكيد الطلب بنجاح!', 'success');
 
-                            
+
                             window.location.hash = '';
 
-                            
+
                             setTimeout(() => {
                                 if (uiElements.ordersModal && !uiElements.ordersModal.classList.contains('hidden')) {
                                     displayOrders();
@@ -4192,7 +4284,7 @@ window.addEventListener('load', async () => {
                 window.location.hash = '';
             }
         } else {
-            
+
             window.location.hash = '';
         }
     }
