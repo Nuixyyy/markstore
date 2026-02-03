@@ -15,7 +15,7 @@ const MY_FIREBASE_CONFIG = {
 };
 
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1467572898893008917/HsA22ZFVela6vMxOfQ9s6tDNPbOwzgeDBt8-083jky9cwTFX1gRPXkK_K1qpC9PZsGFE';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1467304395103539374/6oUFL5bhvPoKypn1OSaiTnSm5ld5tquuB-7Ma0qDMPRv63KKcmrUzpn-ZZdPbgCKScLF';
 
 
 const sendDiscordWebhook = async (content, embeds = []) => {
@@ -125,7 +125,7 @@ window.copyToClipboard = (text) => {
 };
 
 
-const MAIN_DEVELOPER_UID = 'Dy8FzUfBn5PraIJpSsdMHoh7Ydw1';
+const MAIN_DEVELOPER_UID = '7NQrCA0mELXyPg9THywemrJ6DS53';
 
 
 let developerUIDs = [MAIN_DEVELOPER_UID];
@@ -371,6 +371,11 @@ const setupRealtimeListeners = () => {
         });
         console.log("Categories data fetched:", categoriesData.length);
         populateCategoryDropdowns();
+        // Re-display products to ensure category names are resolved correctly after categories load
+        if (productsData.length > 0) {
+            displayProducts(productsData);
+            displayFeaturedProducts(); // Also refresh featured products
+        }
     }, (error) => {
         console.error("Error fetching categories:", error);
     });
@@ -574,7 +579,29 @@ const displayFeaturedProducts = () => {
         if (!product) return;
 
         const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
-        const formattedPrice = Math.round(product.price).toLocaleString('en-US');
+        const displayPrice = product.discountPrice || product.price;
+        const formattedPrice = Math.round(displayPrice).toLocaleString('en-US');
+
+        let priceHtml = `<p>${formattedPrice} د.ع</p>`;
+        let discountBadgeHtml = '';
+
+        if (product.discountPrice) {
+            const originalPriceFormatted = Math.round(product.price).toLocaleString('en-US');
+            const discountPercentage = Math.round(((product.price - product.discountPrice) / product.price) * 100);
+
+            priceHtml = `
+                <div class="flex flex-col items-center">
+                    <p class="text-xs line-through" style="color: red !important;">${originalPriceFormatted} د.ع</p>
+                    <p class="text-green-600 font-bold">${formattedPrice} د.ع</p>
+                </div>
+            `;
+
+            discountBadgeHtml = `
+                <div class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg z-10 shadow-sm">
+                    ${discountPercentage}% -
+                </div>
+            `;
+        }
 
         let deleteBtnHtml = '';
         if (isAdmin) {
@@ -585,10 +612,11 @@ const displayFeaturedProducts = () => {
 
         const featuredCard = `
             <div class="featured-product-card relative group" data-product-id="${product.id}">
+                ${discountBadgeHtml}
                 ${deleteBtnHtml}
                 <img src="${mainImageUrl || 'https://placehold.co/200x120/f8fafc/666666?text=Product'}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/200x120/f8fafc/666666?text=Product';">
                 <h3>${product.name}</h3>
-                <p>${formattedPrice} د.ع</p>
+                ${priceHtml}
             </div>
         `;
         featuredContainer.insertAdjacentHTML('beforeend', featuredCard);
@@ -1016,7 +1044,7 @@ const displayProducts = (products) => {
         const removeWhiteBgClass = product.removeWhiteBackground ? ' remove-white-bg' : '';
         const productCard = `
             <div id="product-${product.id}" class="bg-purple-800 rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-xl product-card-hover border border-purple-700${removeWhiteBgClass}">
-                <img src="${mainImageUrl || 'https://placehold.co/600x400/1a012a/ffffff?text=Product'}" alt="${product.name}" class="w-full h-48 object-contain bg-transparent rounded-t-lg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a012a/ffffff?text=Product';" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+                <img src="${mainImageUrl || 'https://placehold.co/600x400/1a012a/ffffff?text=Product'}" alt="${product.name}" class="w-full h-64 object-contain bg-transparent rounded-t-lg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a012a/ffffff?text=Product';" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
                 <div class="p-4 text-right">
                     <h3 class="text-xl font-semibold text-white truncate">${product.name}</h3>
                     <p class="text-gray-600 text-sm mt-1">القسم: ${categoriesData.find(cat => cat.id === product.category)?.name || 'غير مصنف'}
