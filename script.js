@@ -1232,6 +1232,12 @@ const openProductDetailPage = (product) => {
         buttonsSection = `
             <div class="space-y-3 mb-6">
                 ${adminButtons}
+                <button id="product-page-share-btn" class="w-full bg-blue-500 text-white py-4 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                    </svg>
+                    مشاركة المنتج
+                </button>
                 <button id="product-page-add-to-cart" class="w-full bg-green-600 text-white py-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 shadow-lg flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"></path>
@@ -1309,7 +1315,7 @@ const openProductDetailPage = (product) => {
                     <!-- Main Product Image -->
                     <div class="mb-4">
                         <div class="relative bg-white rounded-lg shadow-lg p-4">
-                            <img id="main-product-image" src="${productImages[0]}" alt="${product.name}" class="w-full h-80 object-contain rounded-lg">
+                            <img id="main-product-image" src="${productImages[0]}" alt="${product.name}" class="w-full h-80 object-contain rounded-lg cursor-zoom-in transition-transform duration-200 hover:scale-[1.02]">
                             <div class="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded-lg text-xs">
                                 <span id="current-img-index">1</span> / <span>${productImages.length}</span>
                             </div>
@@ -1431,6 +1437,24 @@ const openProductDetailPage = (product) => {
 
             if (uiElements.checkoutModal) uiElements.checkoutModal.classList.remove('hidden');
         });
+        const shareBtn = document.getElementById('product-page-share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => {
+                copyProductLink(product);
+            });
+        }
+
+        const mainImg = document.getElementById('main-product-image');
+        if (mainImg) {
+            mainImg.addEventListener('click', () => {
+                // Get current index from the display
+                const currentIndexSpan = document.getElementById('current-img-index');
+                let currentIndex = 0;
+                if (currentIndexSpan) currentIndex = parseInt(currentIndexSpan.textContent) - 1;
+                if (isNaN(currentIndex)) currentIndex = 0;
+                openLightbox(productImages, currentIndex);
+            });
+        }
     }
 
 
@@ -3306,7 +3330,7 @@ const setupEventListeners = () => {
 
                 try {
 
-                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@973658542122893402>`, [embed]);
+                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@1385265431354540204>`, [embed]);
 
 
                     if (orderImages.length > 1) {
@@ -4315,6 +4339,116 @@ window.addEventListener('load', async () => {
 
             window.location.hash = '';
         }
+    }
+});
+
+// --- Helper Functions for Share & Lightbox ---
+
+window.copyProductLink = (product) => {
+    // Construct URL with hash for the product
+    const url = `${window.location.origin}${window.location.pathname}#product-${product.sku || product.id}`;
+
+    // Fallback copy method
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            alertUserMessage('تم نسخ رابط المنتج بنجاح!', 'success');
+        }).catch(err => {
+            console.error('Copy failed', err);
+            prompt('اضغط Ctrl+C لنسخ الرابط:', url);
+        });
+    } else {
+        prompt('اضغط Ctrl+C لنسخ الرابط:', url);
+    }
+};
+
+let currentLightboxImages = [];
+let currentLightboxIndex = 0;
+
+window.openLightbox = (images, startIndex = 0) => {
+    currentLightboxImages = images;
+    currentLightboxIndex = startIndex;
+    const modal = document.getElementById('image-lightbox-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        updateLightboxImage();
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+};
+
+const updateLightboxImage = () => {
+    const img = document.getElementById('lightbox-image');
+    const prevBtn = document.getElementById('lightbox-prev');
+    const nextBtn = document.getElementById('lightbox-next');
+    const counter = document.getElementById('lightbox-counter');
+
+    if (img && currentLightboxImages[currentLightboxIndex]) {
+        img.src = currentLightboxImages[currentLightboxIndex];
+    }
+
+    if (currentLightboxImages.length > 1) {
+        if (prevBtn) prevBtn.classList.remove('hidden');
+        if (nextBtn) nextBtn.classList.remove('hidden');
+        if (counter) counter.textContent = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+    } else {
+        if (prevBtn) prevBtn.classList.add('hidden');
+        if (nextBtn) nextBtn.classList.add('hidden');
+        if (counter) counter.textContent = '';
+    }
+};
+
+window.closeLightbox = () => {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+};
+
+// Navigation handlers
+window.lightboxNext = (e) => {
+    if (e) e.stopPropagation();
+    if (currentLightboxImages.length <= 1) return;
+    currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxImages.length;
+    updateLightboxImage();
+};
+
+window.lightboxPrev = (e) => {
+    if (e) e.stopPropagation();
+    if (currentLightboxImages.length <= 1) return;
+    currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
+    updateLightboxImage();
+};
+
+// Bind to global scope if needed for HTML attributes (though we prefer listeners)
+// Ensure close button works
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('lightbox-close');
+    if (closeBtn) closeBtn.onclick = window.closeLightbox;
+
+    const nextBtn = document.getElementById('lightbox-next');
+    if (nextBtn) nextBtn.onclick = window.lightboxNext;
+
+    const prevBtn = document.getElementById('lightbox-prev');
+    if (prevBtn) prevBtn.onclick = window.lightboxPrev;
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('image-lightbox-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            if (e.key === 'Escape') window.closeLightbox();
+            if (e.key === 'ArrowRight') window.lightboxNext();
+            if (e.key === 'ArrowLeft') window.lightboxPrev();
+        }
+    });
+
+    // Share button in normal details modal (if used)
+    const shareDetailBtn = document.getElementById('share-product-detail-btn');
+    if (shareDetailBtn) {
+        // Note: we need the 'product' object here. 
+        // But the modal is static in index.html, so we can't easily bind specific product data here 
+        // unless openProductDetailPage uses that modal.
+        // Since openProductDetailPage creates its own view, this might be redundant for that view,
+        // but good if the static modal is used elsewhere.
     }
 });
 
