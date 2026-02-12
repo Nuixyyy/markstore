@@ -625,8 +625,23 @@
                         </div>
                     </div>
                     <button type="submit" id="confirm-order-btn"
-                        class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300">
-                        تأكيد الطلب
+                        class="order-btn-animation group relative mx-auto block" dir="ltr">
+                        <span class="default">تأكيد الطلب</span>
+                        <span class="success">تم الطلب بنجاح
+                            <svg viewbox="0 0 12 10">
+                                <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+                            </svg>
+                        </span>
+                        <div class="box"></div>
+                        <div class="truck">
+                            <div class="back"></div>
+                            <div class="front">
+                                <div class="window"></div>
+                            </div>
+                            <div class="light top"></div>
+                            <div class="light bottom"></div>
+                        </div>
+                        <div class="lines"></div>
                     </button>
                     <div id="checkout-message" class="mt-4 text-center"></div>
                 </form>
@@ -957,6 +972,28 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- Color Management Section -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-white mb-2">الألوان المتاحة</label>
+                        <div class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" id="product-color-input"
+                                    class="flex-1 px-3 py-2 rounded-lg focus:outline-none font-medium"
+                                    placeholder="أدخل اسم اللون (مثال: أحمر، أزرق، #FF0000)"
+                                    style="background-color: rgba(255, 255, 255, 0.95); border: 2px solid #6b46c1; color: #1a012a;">
+                                <button type="button" id="add-color-btn"
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">
+                                    إضافة
+                                </button>
+                            </div>
+                            <div id="product-colors-list" class="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg"
+                                style="background-color: rgba(255, 255, 255, 0.1);">
+                                <!-- Colors will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">إضافة
                         المنتج</button>
@@ -1077,6 +1114,28 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- Color Management Section -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-white mb-2">الألوان المتاحة</label>
+                        <div class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" id="edit-product-color-input"
+                                    class="flex-1 px-3 py-2 rounded-lg focus:outline-none font-medium"
+                                    placeholder="أدخل اسم اللون (مثال: أحمر، أزرق، #FF0000)"
+                                    style="background-color: rgba(255, 255, 255, 0.95); border: 2px solid #6b46c1; color: #1a012a;">
+                                <button type="button" id="edit-add-color-btn"
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">
+                                    إضافة
+                                </button>
+                            </div>
+                            <div id="edit-product-colors-list" class="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg"
+                                style="background-color: rgba(255, 255, 255, 0.1);">
+                                <!-- Colors will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">حفظ
                         التعديلات</button>
