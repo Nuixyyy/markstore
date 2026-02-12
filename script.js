@@ -15,7 +15,7 @@ const MY_FIREBASE_CONFIG = {
 };
 
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1467572898893008917/HsA22ZFVela6vMxOfQ9s6tDNPbOwzgeDBt8-083jky9cwTFX1gRPXkK_K1qpC9PZsGFE';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1471196459784474811/RjIbq4U6YUHzgyGV8BSN6CCYeb_9zdV4jtE5A2X0IPj0AT_dpdUfMaX22rybuTx-rZ7R';
 
 
 const sendDiscordWebhook = async (content, embeds = []) => {
@@ -125,7 +125,7 @@ window.copyToClipboard = (text) => {
 };
 
 
-const MAIN_DEVELOPER_UID = '7NQrCA0mELXyPg9THywemrJ6DS53';
+const MAIN_DEVELOPER_UID = 'KHX3gWqMtMQbl0PzumCSMfkSBAm1';
 
 
 let developerUIDs = [MAIN_DEVELOPER_UID];
@@ -1042,8 +1042,17 @@ const displayProducts = (products) => {
         }
 
         const removeWhiteBgClass = product.removeWhiteBackground ? ' remove-white-bg' : '';
+
+        // Generate color circles HTML
+        const colorCirclesHtml = product.colors && product.colors.length > 0 ? `
+            <div class="absolute top-2 left-2 flex gap-1 z-10">
+                ${window.displayProductColors(product.colors)}
+            </div>
+        ` : '';
+
         const productCard = `
-            <div id="product-${product.id}" class="bg-purple-800 rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-xl product-card-hover border border-purple-700${removeWhiteBgClass}">
+            <div id="product-${product.id}" class="bg-purple-800 rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-xl product-card-hover border border-purple-700${removeWhiteBgClass} relative">
+                ${colorCirclesHtml}
                 <img src="${mainImageUrl || 'https://placehold.co/600x400/1a012a/ffffff?text=Product'}" alt="${product.name}" class="w-full h-64 object-contain bg-transparent rounded-t-lg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a012a/ffffff?text=Product';" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
                 <div class="p-4 text-right">
                     <h3 class="text-xl font-semibold text-white truncate">${product.name}</h3>
@@ -1104,7 +1113,7 @@ const displayProducts = (products) => {
                     id: productToBuy.id,
                     productId: productToBuy.id,
                     name: productToBuy.name,
-                    price: productToBuy.price,
+                    price: productToBuy.discountPrice || productToBuy.price,
                     imageUrl: (productToBuy.imageUrls && productToBuy.imageUrls.length > 0) ? productToBuy.imageUrls[0] : productToBuy.imageUrl,
                     quantity: 1
                 }];
@@ -1421,7 +1430,7 @@ const openProductDetailPage = (product) => {
                 id: product.id,
                 productId: product.id,
                 name: product.name,
-                price: product.price,
+                price: product.discountPrice || product.price,
                 imageUrl: mainImageUrl,
                 quantity: 1
             }];
@@ -1854,7 +1863,7 @@ const addToCart = async (product) => {
             await setDoc(cartItemRef, {
                 productId: product.id,
                 name: product.name,
-                price: product.price,
+                price: product.discountPrice || product.price,
                 imageUrl: (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl,
                 quantity: 1,
                 addedAt: new Date().toISOString()
@@ -2072,6 +2081,14 @@ const openEditProductModal = (product) => {
     uiElements.editProductPriceInput.value = product.price;
     uiElements.editProductCategorySelect.value = product.category || '';
 
+    // Populate colors for edit modal
+    editProductColors = product.colors ? [...product.colors] : [];
+    if (typeof renderEditProductColors === 'function') {
+        renderEditProductColors();
+    } else {
+        console.error("renderEditProductColors function not found");
+    }
+
 
     const hasDiscountCheckbox = document.getElementById('edit-product-has-discount');
     const discountContainer = document.getElementById('edit-product-discount-container');
@@ -2245,11 +2262,12 @@ const deleteReview = async (reviewId) => {
 };
 
 
-const populateCheckoutModalDirectPurchase = (product) => {
-    if (!uiElements.checkoutNameInput || !uiElements.checkoutPhoneInput || !uiElements.checkoutGovernorateSelect || !uiElements.checkoutDistrictInput || !uiElements.checkoutNotesTextarea || !uiElements.checkoutProductsList || !uiElements.checkoutGrandTotal) {
-        console.error("One or more checkout modal elements not found.");
-        return;
-    }
+// Function to populate checkout modal for direct purchase with color selector
+window.populateCheckoutModalDirectPurchase = function (product) {
+    const checkoutProductsList = document.getElementById('checkout-products-list');
+    const checkoutGrandTotal = document.getElementById('checkout-grand-total');
+
+    if (!checkoutProductsList || !checkoutGrandTotal) return;
 
     if (!currentUserProfile || !userId) {
         alertUserMessage("يرجى تسجيل الدخول أولاً لتعبئة معلومات الشحن.", 'warning');
@@ -2262,68 +2280,87 @@ const populateCheckoutModalDirectPurchase = (product) => {
     uiElements.checkoutDistrictInput.value = currentUserProfile.district || '';
     uiElements.checkoutNotesTextarea.value = '';
 
-    uiElements.checkoutProductsList.innerHTML = '';
-    const itemTotal = product.price;
-    const formattedItemTotal = Math.round(itemTotal).toLocaleString('en-US');
+    const displayPrice = product.discountPrice || product.price;
+    const deliveryCost = product.freeDelivery ? 0 : 5000;
+    const grandTotal = displayPrice + deliveryCost;
 
-
+    // Get product image
     const mainImageUrl = getProxiedImageUrl((product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl);
 
+    // Create color selector HTML if product has colors
+    const colorSelectorHtml = product.colors && product.colors.length > 0 ?
+        window.createColorSelector(product.colors, product.id) : '';
 
-    const freeDeliveryBadge = product.freeDelivery ?
-        '<span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded mr-2">توصيل مجاني</span>' : '';
-
-    const productItemHtml = `
-        <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center">
-                <img src="${mainImageUrl || 'https://placehold.co/40x40/1a012a/ffffff?text=Item'}" alt="${product.name}" class="w-10 h-10 object-cover rounded-md ml-2" onerror="this.onerror=null;this.src='https://placehold.co/40x40/1a012a/ffffff?text=Item';">
-                <div class="flex flex-col">
-                    <span class="text-sm font-medium text-white">${product.name} (x1)</span>
-                    ${freeDeliveryBadge}
+    checkoutProductsList.innerHTML = `
+        <div class="bg-purple-700 p-3 rounded-lg">
+            <div class="flex items-center gap-3 mb-3 border-b border-purple-600 pb-3">
+                <img src="${mainImageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md border border-purple-500">
+                <div class="flex-1">
+                    <h4 class="text-white font-semibold text-lg">${product.name}</h4>
+                    <p class="text-purple-200 text-sm">${Math.round(displayPrice).toLocaleString('en-US')} د.ع</p>
                 </div>
             </div>
-            <span class="text-sm font-medium text-white">${formattedItemTotal} د.ع</span>
+            ${colorSelectorHtml}
         </div>
-    `;
-    uiElements.checkoutProductsList.insertAdjacentHTML('beforeend', productItemHtml);
-
-
-    const deliveryFee = product.freeDelivery ? 0 : 5000;
-    const grandTotal = itemTotal + deliveryFee;
-
-
-    let summaryHtml = `
-        <div class="border-t border-purple-600 pt-2 mt-2">
-            <div class="flex justify-between text-sm">
-                <span>المجموع الفرعي:</span>
-                <span>${formattedItemTotal} د.ع</span>
-            </div>
+        ${!product.freeDelivery ? `
+        <div class="flex justify-between items-center text-sm text-purple-300 mt-2">
+            <span>التوصيل:</span>
+            <span>${deliveryCost.toLocaleString('en-US')} د.ع</span>
+        </div>
+        ` : `
+        <div class="flex justify-between items-center text-sm text-green-400 mt-2">
+            <span>التوصيل:</span>
+            <span>مجاني</span>
+        </div>
+        `}
     `;
 
-    if (!product.freeDelivery) {
-        summaryHtml += `
-            <div class="flex justify-between text-sm mt-1">
-                <span>رسوم التوصيل:</span>
-                <span>${Math.round(deliveryFee).toLocaleString('en-US')} د.ع</span>
-            </div>
-        `;
-    } else {
-        summaryHtml += `
-            <div class="flex justify-between text-sm text-green-400 mt-1">
-                <span>التوصيل:</span>
-                <span>مجاني</span>
-            </div>
-        `;
+    checkoutGrandTotal.textContent = `${Math.round(grandTotal).toLocaleString('en-US')} د.ع`;
+
+    // Store product reference and clear any previous selection
+    window.currentCheckoutProduct = product;
+
+    // Clear previously selected color for this product ID in this session context if needed
+    // or keep it if we want to persist. Usually better to clear for a fresh "Buy Now".
+    // But selectProductColor uses global storage. 
+    // Ideally we should adhere to what the user last picked or reset.
+    // Let's reset the selection visually (state is in global object).
+    // Actually, createColorSelector generates new buttons, so visual state is reset. 
+    // We should probably clear the global state for this product to avoid stale data.
+    if (selectedProductColors[product.id]) delete selectedProductColors[product.id];
+};
+
+// Helper function to get selected color info for order
+window.getSelectedColorForOrder = function (productId) {
+    const selectedColor = window.getSelectedProductColor(productId);
+    if (!selectedColor) return null;
+
+    return {
+        name: selectedColor,
+        displayText: `اللون: ${selectedColor}`
+    };
+};
+
+// Helper function to validate color selection before checkout
+window.validateColorSelection = function (product) {
+    if (!product || !product.colors || product.colors.length === 0) {
+        return { valid: true, message: '' };
     }
 
-    summaryHtml += `</div>`;
-    uiElements.checkoutProductsList.insertAdjacentHTML('beforeend', summaryHtml);
+    const selectedColor = window.getSelectedProductColor(product.id);
+    if (!selectedColor) {
+        return {
+            valid: false,
+            message: 'الرجاء اختيار اللون قبل إتمام الطلب'
+        };
+    }
 
-    uiElements.checkoutGrandTotal.textContent = `${Math.round(grandTotal).toLocaleString('en-US')} د.ع`;
+    return { valid: true, message: '', color: selectedColor };
 };
 
 
 const populateCheckoutModal = () => {
+    window.currentCheckoutProduct = null;
     if (!uiElements.checkoutNameInput || !uiElements.checkoutPhoneInput || !uiElements.checkoutGovernorateSelect || !uiElements.checkoutDistrictInput || !uiElements.checkoutNotesTextarea || !uiElements.checkoutProductsList || !uiElements.checkoutGrandTotal) {
         console.error("One or more checkout modal elements not found.");
         return;
@@ -2360,20 +2397,26 @@ const populateCheckoutModal = () => {
 
         const formattedItemTotal = Math.round(itemTotal).toLocaleString('en-US');
 
+        // Create color selector HTML if product has colors
+        const colorSelectorHtml = productData && productData.colors && productData.colors.length > 0 ?
+            window.createColorSelector(productData.colors, item.productId) : '';
 
         const freeDeliveryBadge = (productData && productData.freeDelivery) ?
             '<span class="text-xs bg-green-600 text-white px-1 py-0.5 rounded mr-2">توصيل مجاني</span>' : '';
 
         const productItemHtml = `
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center">
-                    <img src="${getProxiedImageUrl(item.imageUrl) || 'https://placehold.co/40x40/1a012a/ffffff?text=Item'}" alt="${item.name}" class="w-10 h-10 object-cover rounded-md ml-2" onerror="this.onerror=null;this.src='https://placehold.co/40x40/1a012a/ffffff?text=Item';">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-medium text-white">${item.name} (x${item.quantity})</span>
-                        ${freeDeliveryBadge}
+            <div class="mb-4 bg-purple-700 p-3 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <img src="${getProxiedImageUrl(item.imageUrl) || 'https://placehold.co/40x40/1a012a/ffffff?text=Item'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md ml-2 border border-purple-500" onerror="this.onerror=null;this.src='https://placehold.co/40x40/1a012a/ffffff?text=Item';">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white">${item.name} (x${item.quantity})</span>
+                            ${freeDeliveryBadge}
+                        </div>
                     </div>
+                    <span class="text-sm font-medium text-white">${formattedItemTotal} د.ع</span>
                 </div>
-                <span class="text-sm font-medium text-white">${formattedItemTotal} د.ع</span>
+                ${colorSelectorHtml}
             </div>
         `;
         uiElements.checkoutProductsList.insertAdjacentHTML('beforeend', productItemHtml);
@@ -3114,7 +3157,7 @@ const setupEventListeners = () => {
                     id: productToBuy.id,
                     productId: productToBuy.id,
                     name: productToBuy.name,
-                    price: productToBuy.price,
+                    price: productToBuy.discountPrice || productToBuy.price,
                     imageUrl: mainImageUrl,
                     quantity: 1
                 }];
@@ -3157,6 +3200,28 @@ const setupEventListeners = () => {
         uiElements.checkoutForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // Validate Color Selection for Direct Purchase
+            if (window.currentCheckoutProduct) {
+                const validation = window.validateColorSelection(window.currentCheckoutProduct);
+                if (!validation.valid) {
+                    alertUserMessage(validation.message, 'error');
+                    return;
+                }
+            } else {
+                // Validate Color Selection for Cart Purchase
+                const cartToProcess = orderCartData.length > 0 ? orderCartData : currentCart;
+                for (const item of cartToProcess) {
+                    const product = productsData.find(p => p.id === item.productId);
+                    if (product) {
+                        const validation = window.validateColorSelection(product);
+                        if (!validation.valid) {
+                            alertUserMessage(`الرجاء اختيار لون للمنتج: ${item.name}`, 'error');
+                            return;
+                        }
+                    }
+                }
+            }
+
             const fullName = uiElements.checkoutNameInput.value.trim();
             const governorate = uiElements.checkoutGovernorateSelect.value;
             const district = uiElements.checkoutDistrictInput.value.trim();
@@ -3198,22 +3263,43 @@ const setupEventListeners = () => {
                     governorate: governorate,
                     district: district,
                     notes: notes || '',
-                    items: cartToProcess.map(item => ({
-                        productId: item.productId,
-                        name: item.name,
-                        price: item.price,
-                        quantity: item.quantity
-                    })),
+                    items: cartToProcess.map(item => {
+                        const selectedColor = window.getSelectedProductColor(item.productId || item.id);
+                        return {
+                            productId: item.productId || item.id,
+                            name: item.name,
+                            price: item.price,
+                            quantity: item.quantity,
+                            color: selectedColor || null
+                        };
+                    }),
+                    totalAmount: orderCartData.reduce((total, item) => total + (item.price * item.quantity), 0),
                     status: 'received',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    createdAt: new Date().toISOString()
                 };
+
+                // Add colors to webhook embed
+                const embeds = cartToProcess.map(item => {
+                    const selectedColor = window.getSelectedProductColor(item.productId || item.id);
+                    const colorText = selectedColor ? `\nاللون: **${selectedColor}**` : '';
+                    return {
+                        title: `تفاصيل المنتج: ${item.name}`,
+                        description: `الكمية: ${item.quantity}\nالسعر: ${item.price} د.ع${colorText}`,
+                        color: 5814783,
+                        fields: [
+                            { name: "معرف المنتج", value: item.productId || item.id, inline: true }
+                        ],
+                        thumbnail: {
+                            url: item.imageUrl || ''
+                        }
+                    };
+                });
 
 
                 let cartTotalForBot = 0;
                 let hasNonFreeDeliveryItems = false;
                 cartToProcess.forEach((item) => {
-                    const productData = productsData.find(p => p.id === item.productId);
+                    const productData = productsData.find(p => p.id === (item.productId || item.id));
                     if (productData && !productData.freeDelivery) {
                         hasNonFreeDeliveryItems = true;
                     }
@@ -3232,7 +3318,7 @@ const setupEventListeners = () => {
 
                 const orderImages = [];
                 for (const item of cartToProcess) {
-                    const productData = productsData.find(p => p.id === item.productId);
+                    const productData = productsData.find(p => p.id === (item.productId || item.id));
                     if (productData) {
                         const mainImage = (productData.imageUrls && productData.imageUrls.length > 0)
                             ? productData.imageUrls[0]
@@ -3276,9 +3362,11 @@ const setupEventListeners = () => {
 
                 let productsList = '';
                 cartToProcess.forEach((item, index) => {
-                    const productData = productsData.find(p => p.id === item.productId);
+                    const productData = productsData.find(p => p.id === (item.productId || item.id));
                     const freeDeliveryText = (productData && productData.freeDelivery) ? ' (توصيل مجاني)' : '';
-                    productsList += `${index + 1}. **${item.name}** (${item.quantity}x)${freeDeliveryText}\n💰 ${Math.round(item.price).toLocaleString('en-US')} د.ع\n`;
+                    const selectedColor = window.getSelectedProductColor(item.productId || item.id);
+                    const colorText = selectedColor ? `\n🎨 اللون: ${selectedColor}` : '';
+                    productsList += `${index + 1}. **${item.name}** (${item.quantity}x)${freeDeliveryText}${colorText}\n💰 ${Math.round(item.price).toLocaleString('en-US')} د.ع\n`;
                 });
                 fields.push({
                     name: '🛒 المنتجات',
@@ -3328,10 +3416,13 @@ const setupEventListeners = () => {
                 }
 
 
+                // 1. Start Animation
+                const confirmBtn = document.getElementById('confirm-order-btn');
+                if (confirmBtn) confirmBtn.classList.add('animate');
+
+                // 2. Send Webhook
                 try {
-
                     await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@1385265431354540204>`, [embed]);
-
 
                     if (orderImages.length > 1) {
                         for (let i = 1; i < Math.min(orderImages.length, 5); i++) {
@@ -3344,93 +3435,53 @@ const setupEventListeners = () => {
                             await sendDiscordWebhook('', [imageEmbed]);
                         }
                     }
+                } catch (webhookError) {
+                    console.error("Webhook failed:", webhookError);
+                    alertUserMessage('تم حفظ الطلب، لكن فشل إرسال الإشعار.', 'warning');
+                }
 
-                    alertUserMessage('تم تأكيد الطلب بنجاح! سيتم التواصل معك قريباً.', 'success');
-                    if (uiElements.checkoutModal) uiElements.checkoutModal.classList.add('hidden');
-                    if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.add('hidden');
+                // 3. Wait for animation to show "Success" state (approx 8s total)
+                await new Promise(resolve => setTimeout(resolve, 8000));
 
+                alertUserMessage('تم تأكيد الطلب بنجاح! سيتم التواصل معك قريباً.', 'success');
 
-                    orderCartData = [];
+                // 4. Cleanup UI
+                if (uiElements.checkoutModal) uiElements.checkoutModal.classList.add('hidden');
+                if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.add('hidden');
 
+                // Reset animation class
+                if (confirmBtn) setTimeout(() => confirmBtn.classList.remove('animate'), 1000);
 
-                    const shouldClearCart = cartToProcess.length > 0 &&
-                        cartToProcess[0].id !== undefined;
+                // 5. Clear Cart
+                orderCartData = [];
+                const shouldClearCart = cartToProcess.length > 0 && cartToProcess[0].id !== undefined;
 
-                    if (shouldClearCart) {
-                        try {
-                            console.log("Attempting to clear cart...");
-                            const cartItemsRef = collection(db, `users/${userId}/cart`);
-                            const cartSnapshot = await getDocs(cartItemsRef);
+                if (shouldClearCart) {
+                    try {
+                        console.log("Attempting to clear cart...");
+                        const cartItemsRef = collection(db, `users/${userId}/cart`);
+                        const cartSnapshot = await getDocs(cartItemsRef);
 
-                            if (cartSnapshot.empty) {
-                                console.log("Cart is already empty.");
-                            } else {
-                                const deleteCartPromises = [];
-                                cartSnapshot.forEach(doc => {
-                                    console.log("Deleting cart item:", doc.id);
-                                    deleteCartPromises.push(deleteDoc(doc.ref));
-                                });
-                                await Promise.all(deleteCartPromises);
-
-
-                                currentCart = [];
-
-
-                                displayCart();
-
-                                console.log("Cart cleared successfully after order.");
-                            }
-                        } catch (cartError) {
-                            console.error("Error clearing cart:", cartError);
-                            console.error("Cart error details:", cartError.message);
-
+                        if (!cartSnapshot.empty) {
+                            const deleteCartPromises = [];
+                            cartSnapshot.forEach(doc => {
+                                deleteCartPromises.push(deleteDoc(doc.ref));
+                            });
+                            await Promise.all(deleteCartPromises);
+                            console.log("Cart cleared successfully.");
                         }
-                    } else {
-                        console.log("Skipping cart clear (Buy Now order).");
-                    }
 
-                } catch (discordError) {
-                    console.error("Discord Webhook Error:", discordError);
-                    alertUserMessage('تم حفظ الطلب ولكن فشل إرسال الإشعار. سيتم مراجعة طلبك من لوحة التحكم.', 'warning');
-
-
-                    if (uiElements.checkoutModal) uiElements.checkoutModal.classList.add('hidden');
-                    if (uiElements.shoppingCartModal) uiElements.shoppingCartModal.classList.add('hidden');
-                    orderCartData = [];
-
-
-                    const shouldClearCart = cartToProcess.length > 0 &&
-                        cartToProcess[0].id !== undefined;
-
-                    if (shouldClearCart) {
-                        try {
-                            console.log("Attempting to clear cart (despite Discord error)...");
-                            const cartItemsRef = collection(db, `users/${userId}/cart`);
-                            const cartSnapshot = await getDocs(cartItemsRef);
-
-                            if (!cartSnapshot.empty) {
-                                const deleteCartPromises = [];
-                                cartSnapshot.forEach(doc => {
-                                    deleteCartPromises.push(deleteDoc(doc.ref));
-                                });
-                                await Promise.all(deleteCartPromises);
-
-
-                                currentCart = [];
-
-
-                                displayCart();
-
-                                console.log("Cart cleared after order (despite Discord error).");
-                            }
-                        } catch (cartError) {
-                            console.error("Error clearing cart:", cartError);
-                        }
+                        currentCart = [];
+                        displayCart();
+                    } catch (cartError) {
+                        console.error("Error clearing cart:", cartError);
                     }
                 }
 
             } catch (error) {
                 console.error("Error confirming order:", error);
+                const confirmBtn = document.getElementById('confirm-order-btn');
+                if (confirmBtn) confirmBtn.classList.remove('animate');
                 alertUserMessage(`فشل تأكيد الطلب: ${error.message}`, 'error');
             }
         });
@@ -3495,6 +3546,8 @@ const setupEventListeners = () => {
             }
 
             try {
+                const colors = window.getProductColorsForSave();
+
                 const productsColRef = collection(db, `products`);
                 const docRef = await addDoc(productsColRef, {
                     name,
@@ -3507,7 +3560,8 @@ const setupEventListeners = () => {
                     removeWhiteBackground,
                     availability: availability || '',
                     sku: generateProductSKU(),
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    colors: colors
                 });
                 console.log("Product successfully added to Firestore with ID:", docRef.id);
                 alertUserMessage('تم إضافة المنتج بنجاح!', 'success');
@@ -3707,7 +3761,8 @@ const setupEventListeners = () => {
                     category,
                     freeDelivery,
                     removeWhiteBackground,
-                    availability: availability || ''
+                    availability: availability || '',
+                    colors: window.getEditProductColorsForSave()
                 };
 
 
@@ -4348,16 +4403,24 @@ window.copyProductLink = (product) => {
     // Construct URL with hash for the product
     const url = `${window.location.origin}${window.location.pathname}#product-${product.sku || product.id}`;
 
+    // Get image URL for preview
+    const mainImage = (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : product.imageUrl;
+    const imageUrl = getProxiedImageUrl(mainImage);
+
+    // Combine for clipboard: Link + Image URL (to force preview on some platforms)
+    // We put the Main URL first so it's the primary link, and Image URL on a new line.
+    const textToCopy = imageUrl ? `${url}\n${imageUrl}` : url;
+
     // Fallback copy method
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
+        navigator.clipboard.writeText(textToCopy).then(() => {
             alertUserMessage('تم نسخ رابط المنتج بنجاح!', 'success');
         }).catch(err => {
             console.error('Copy failed', err);
-            prompt('اضغط Ctrl+C لنسخ الرابط:', url);
+            prompt('اضغط Ctrl+C لنسخ الرابط:', textToCopy);
         });
     } else {
-        prompt('اضغط Ctrl+C لنسخ الرابط:', url);
+        prompt('اضغط Ctrl+C لنسخ الرابط:', textToCopy);
     }
 };
 
@@ -4451,4 +4514,483 @@ document.addEventListener('DOMContentLoaded', () => {
         // but good if the static modal is used elsewhere.
     }
 });
+
+
+// --- AI Description Generator ---
+document.addEventListener('DOMContentLoaded', () => {
+    const generateBtn = document.getElementById('generate-description-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async () => {
+            const nameInput = document.getElementById('product-name');
+            const descInput = document.getElementById('product-description');
+
+            if (!nameInput || !nameInput.value.trim()) {
+                alertUserMessage('⚠️ يرجى كتابة اسم المنتج أولاً لتوليد الوصف المناسب.', 'warning');
+                if (nameInput) nameInput.focus();
+                return;
+            }
+
+            const productName = nameInput.value.trim();
+            const originalBtnContent = generateBtn.innerHTML;
+
+            // UI Loading State
+            generateBtn.innerHTML = `
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                جاري التوليد...
+            `;
+            generateBtn.disabled = true;
+            generateBtn.classList.add('cursor-not-allowed', 'opacity-75');
+
+            try {
+                // Call Gemini API
+                // IPO: Input (Product Name) -> Process (Gemini API) -> Output (Description)
+                const generatedText = await fetchGeminiDescription(productName);
+
+                // Typewriter Effect
+                if (descInput) {
+                    descInput.value = ''; // Clear previous text
+                    await typeWriter(descInput, generatedText);
+                    descInput.dispatchEvent(new Event('input')); // Trigger autosize/validation
+                }
+
+                alertUserMessage('✨ تم توليد الوصف بنجاح!', 'success');
+
+            } catch (error) {
+                console.error("AI Generation Error:", error);
+                const msg = error.message.includes('الحد المسموح') ? error.message : 'فشل توليد الوصف. يرجى التأكد من مفتاح API أو المحاولة لاحقاً.';
+                alertUserMessage(msg, 'error');
+            } finally {
+                // Restore Button State
+                generateBtn.innerHTML = originalBtnContent;
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('cursor-not-allowed', 'opacity-75');
+            }
+        });
+    }
+});
+
+// Helper: Call Gemini API
+async function fetchGeminiDescription(productName) {
+    // IMPORTANT: Replace 'YOUR_GEMINI_API_KEY' with your actual key.
+    // WARNING: Exposing API keys in client-side code is risky. ideally use a backend proxy.
+    const API_KEY = 'AIzaSyC0Vdf8-s1S2sorfmkn7YHZGcCJekBC2pE';
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    const prompt = `اكتب وصفًا تسويقيًا جذابًا ومختصرًا (حوالي 3-4 جمل) للمنتج التالي باللغة العربية: ${productName}. ركز على المميزات والجودة.`;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('API_QUOTA_EXCEEDED');
+            }
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Gemini API Error');
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) throw new Error('No text returned from Gemini');
+
+        return text;
+    } catch (error) {
+        // Fallback simulation if API fails or key is missing (for demo purposes)
+        if (error.message.includes('API_KEY_INVALID') || error.message.includes('400')) {
+            console.warn("Using fallback description due to missing/invalid API Key.");
+            return `(ملاحظة: تأكد من وضع مفتاح API صحيح لتفعيل الذكاء الاصطناعي)\n\nهذا وصف تجريبي للمنتج: ${productName}. يتميز هذا المنتج بالجودة العالية والتصميم العصري الذي يناسب جميع الأذواق. احصل عليه الآن بسعر مميز وتمتع بتجربة استخدام فريدة.`;
+        }
+        throw error;
+    }
+}
+
+// Helper: Typewriter Effect
+function typeWriter(element, text, speed = 30) {
+    return new Promise(resolve => {
+        let i = 0;
+        element.value = '';
+        function type() {
+            if (i < text.length) {
+                element.value += text.charAt(i);
+                element.scrollTop = element.scrollHeight; // Auto-scroll to bottom
+                i++;
+                setTimeout(type, speed);
+            } else {
+                resolve();
+            }
+        }
+        type();
+    });
+}
+
+
+// --- Color Management System ---
+let productColors = []; // For add product form
+let editProductColors = []; // For edit product form
+
+// Helper function to detect if a string is a hex color
+function isHexColor(str) {
+    return /^#[0-9A-F]{6}$/i.test(str);
+}
+
+// Helper function to get color display style
+function getColorStyle(colorName) {
+    if (isHexColor(colorName)) {
+        return `background-color: ${colorName};`;
+    }
+
+    // Map Arabic color names to hex
+    const colorMap = {
+        'أحمر': '#FF0000',
+        'أزرق': '#0000FF',
+        'أخضر': '#00FF00',
+        'أصفر': '#FFFF00',
+        'أسود': '#000000',
+        'أبيض': '#FFFFFF',
+        'برتقالي': '#FFA500',
+        'بنفسجي': '#800080',
+        'وردي': '#FFC0CB',
+        'بني': '#8B4513',
+        'رمادي': '#808080',
+        'ذهبي': '#FFD700',
+        'فضي': '#C0C0C0',
+        'سماوي': '#87CEEB',
+        'بيج': '#F5F5DC'
+    };
+
+    return colorMap[colorName] ? `background-color: ${colorMap[colorName]};` : `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);`;
+}
+
+// Add color to the add product form
+function addColorToProduct() {
+    const colorInput = document.getElementById('product-color-input');
+    const colorsList = document.getElementById('product-colors-list');
+
+    if (!colorInput || !colorsList) return;
+
+    const colorValue = colorInput.value.trim();
+    if (!colorValue) {
+        alertUserMessage('الرجاء إدخال اسم اللون', 'warning');
+        return;
+    }
+
+    if (productColors.includes(colorValue)) {
+        alertUserMessage('هذا اللون موجود مسبقاً', 'warning');
+        return;
+    }
+
+    productColors.push(colorValue);
+    renderProductColors();
+    colorInput.value = '';
+}
+
+// Remove color from add product form
+window.removeColorFromProduct = function (colorName) {
+    productColors = productColors.filter(c => c !== colorName);
+    renderProductColors();
+};
+
+// Render colors in add product form
+function renderProductColors() {
+    const colorsList = document.getElementById('product-colors-list');
+    if (!colorsList) return;
+
+    if (productColors.length === 0) {
+        colorsList.innerHTML = '<p class="text-gray-400 text-sm">لا توجد ألوان مضافة</p>';
+        return;
+    }
+
+    colorsList.innerHTML = productColors.map(color => `
+        <div class="flex items-center gap-2 bg-purple-700 px-3 py-2 rounded-lg">
+            <div class="w-6 h-6 rounded-full border-2 border-white" style="${getColorStyle(color)}"></div>
+            <span class="text-white text-sm">${color}</span>
+            <button type="button" onclick="window.removeColorFromProduct('${color}')" 
+                class="text-red-400 hover:text-red-300 ml-2">
+                ✕
+            </button>
+        </div>
+    `).join('');
+}
+
+// Add color to edit product form
+function addColorToEditProduct() {
+    const colorInput = document.getElementById('edit-product-color-input');
+    const colorsList = document.getElementById('edit-product-colors-list');
+
+    if (!colorInput || !colorsList) return;
+
+    const colorValue = colorInput.value.trim();
+    if (!colorValue) {
+        alertUserMessage('الرجاء إدخال اسم اللون', 'warning');
+        return;
+    }
+
+    if (editProductColors.includes(colorValue)) {
+        alertUserMessage('هذا اللون موجود مسبقاً', 'warning');
+        return;
+    }
+
+    editProductColors.push(colorValue);
+    renderEditProductColors();
+    colorInput.value = '';
+}
+
+// Remove color from edit product form
+window.removeColorFromEditProduct = function (colorName) {
+    editProductColors = editProductColors.filter(c => c !== colorName);
+    renderEditProductColors();
+};
+
+// Render colors in edit product form
+function renderEditProductColors() {
+    const colorsList = document.getElementById('edit-product-colors-list');
+    if (!colorsList) return;
+
+    if (editProductColors.length === 0) {
+        colorsList.innerHTML = '<p class="text-gray-400 text-sm">لا توجد ألوان مضافة</p>';
+        return;
+    }
+
+    colorsList.innerHTML = editProductColors.map(color => `
+        <div class="flex items-center gap-2 bg-purple-700 px-3 py-2 rounded-lg">
+            <div class="w-6 h-6 rounded-full border-2 border-white" style="${getColorStyle(color)}"></div>
+            <span class="text-white text-sm">${color}</span>
+            <button type="button" onclick="window.removeColorFromEditProduct('${color}')" 
+                class="text-red-400 hover:text-red-300 ml-2">
+                ✕
+            </button>
+        </div>
+    `).join('');
+}
+
+// Expose functions to global scope
+window.removeColorFromProduct = removeColorFromProduct;
+window.removeColorFromEditProduct = removeColorFromEditProduct;
+
+// Initialize color management on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+    // Add product color button
+    const addColorBtn = document.getElementById('add-color-btn');
+    if (addColorBtn) {
+        addColorBtn.addEventListener('click', addColorToProduct);
+    }
+
+    // Add color on Enter key in add product form
+    const colorInput = document.getElementById('product-color-input');
+    if (colorInput) {
+        colorInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addColorToProduct();
+            }
+        });
+    }
+
+    // Edit product color button
+    const editAddColorBtn = document.getElementById('edit-add-color-btn');
+    if (editAddColorBtn) {
+        editAddColorBtn.addEventListener('click', addColorToEditProduct);
+    }
+
+    // Add color on Enter key in edit product form
+    const editColorInput = document.getElementById('edit-product-color-input');
+    if (editColorInput) {
+        editColorInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addColorToEditProduct();
+            }
+        });
+    }
+
+    // Reset colors when add product modal is closed
+    const addProductModal = document.getElementById('add-product-modal');
+    if (addProductModal) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    if (addProductModal.classList.contains('hidden')) {
+                        productColors = [];
+                        renderProductColors();
+                    }
+                }
+            });
+        });
+        observer.observe(addProductModal, { attributes: true });
+    }
+});
+
+// Helper function to get colors array for saving
+window.getProductColorsForSave = function () {
+    return productColors.length > 0 ? productColors : [];
+};
+
+// Helper function to get edit product colors for saving
+window.getEditProductColorsForSave = function () {
+    return editProductColors.length > 0 ? editProductColors : [];
+};
+
+// Helper function to load colors into edit form
+window.loadColorsIntoEditForm = function (colors) {
+    editProductColors = colors && Array.isArray(colors) ? colors : [];
+    renderEditProductColors();
+};
+
+// Helper function to display colors in product cards
+window.displayProductColors = function (colors, containerElement) {
+    if (!colors || !Array.isArray(colors) || colors.length === 0) {
+        return '';
+    }
+
+    return colors.map(color => `
+        <div class="w-5 h-5 rounded-full shadow-md" 
+             style="${getColorStyle(color)}" 
+             title="${color}">
+        </div>
+    `).join('');
+};
+
+// Helper function to create color selector for checkout
+window.createColorSelector = function (colors, productId) {
+    if (!colors || !Array.isArray(colors) || colors.length === 0) {
+        return '';
+    }
+
+    return `
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-white mb-2">اختر اللون:</label>
+            <div class="flex flex-wrap gap-2">
+                ${colors.map(color => `
+                    <button type="button" 
+                        class="color-option flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-purple-500 hover:border-green-400 transition-all duration-200 transform hover:scale-105"
+                        data-product-id="${productId}"
+                        data-color="${color}"
+                        onclick="selectProductColor('${productId}', '${color}', this)">
+                        <div class="w-6 h-6 rounded-full border border-white shadow-sm" style="${getColorStyle(color)}"></div>
+                        <span class="text-sm text-white font-medium">${color}</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+};
+
+// Store selected colors for products in cart
+let selectedProductColors = {};
+
+// Function to select color for a product
+window.selectProductColor = function (productId, color, buttonElement) {
+    // Remove selection from other buttons for this product
+    const allButtons = document.querySelectorAll(`.color-option[data-product-id="${productId}"]`);
+    allButtons.forEach(btn => {
+        btn.classList.remove('border-green-400', 'bg-green-600', 'ring-2', 'ring-white', 'scale-110');
+        btn.classList.add('border-purple-500', 'hover:border-green-400');
+        // Reset icon if added
+        const icon = btn.querySelector('.check-icon');
+        if (icon) icon.remove();
+    });
+
+    // Add selection to clicked button
+    buttonElement.classList.remove('border-purple-500', 'hover:border-green-400');
+    buttonElement.classList.add('border-green-400', 'bg-green-600', 'ring-2', 'ring-white', 'scale-110');
+
+    // Add checkmark icon for extra visibility
+    if (!buttonElement.querySelector('.check-icon')) {
+        const checkIcon = document.createElement('span');
+        checkIcon.className = 'check-icon ml-auto text-white font-bold';
+        checkIcon.innerHTML = '✓';
+        buttonElement.appendChild(checkIcon);
+    }
+
+    // Store the selected color
+    selectedProductColors[productId] = color;
+};
+
+// Function to get selected color for a product
+window.getSelectedProductColor = function (productId) {
+    return selectedProductColors[productId] || null;
+};
+
+// Function to clear selected color for a product
+window.clearSelectedProductColor = function (productId) {
+    delete selectedProductColors[productId];
+};
+
+// Function to open edit product modal and load product data
+window.openEditProductModal = function (product) {
+    if (!product) return;
+
+    const editModal = document.getElementById('edit-product-modal');
+    if (!editModal) return;
+
+    // Load basic product data
+    const editProductId = document.getElementById('edit-product-id');
+    const editProductName = document.getElementById('edit-product-name');
+    const editProductPrice = document.getElementById('edit-product-price');
+    const editProductDescription = document.getElementById('edit-product-description');
+    const editProductCategory = document.getElementById('edit-product-category');
+    const editProductAvailability = document.getElementById('edit-product-availability');
+    const editProductFreeDelivery = document.getElementById('edit-product-free-delivery');
+    const editProductRemoveWhiteBg = document.getElementById('edit-product-remove-white-bg');
+    const editProductHasDiscount = document.getElementById('edit-product-has-discount');
+    const editProductDiscountPrice = document.getElementById('edit-product-discount-price');
+    const editProductDiscountContainer = document.getElementById('edit-product-discount-container');
+
+    if (editProductId) editProductId.value = product.id;
+    if (editProductName) editProductName.value = product.name || '';
+    if (editProductPrice) editProductPrice.value = product.price || '';
+    if (editProductDescription) editProductDescription.value = product.description || '';
+    if (editProductCategory) editProductCategory.value = product.category || '';
+    if (editProductAvailability) editProductAvailability.value = product.availability || '';
+    if (editProductFreeDelivery) editProductFreeDelivery.checked = product.freeDelivery || false;
+    if (editProductRemoveWhiteBg) editProductRemoveWhiteBg.checked = product.removeWhiteBackground || false;
+
+    // Handle discount
+    if (editProductHasDiscount && editProductDiscountPrice && editProductDiscountContainer) {
+        if (product.discountPrice) {
+            editProductHasDiscount.checked = true;
+            editProductDiscountPrice.value = product.discountPrice;
+            editProductDiscountContainer.classList.remove('hidden');
+        } else {
+            editProductHasDiscount.checked = false;
+            editProductDiscountPrice.value = '';
+            editProductDiscountContainer.classList.add('hidden');
+        }
+    }
+
+    // Load image URLs
+    for (let i = 1; i <= 5; i++) {
+        const imageUrlInput = document.getElementById(`edit-product-image-url-${i}`);
+        if (imageUrlInput) {
+            if (product.imageUrls && product.imageUrls[i - 1]) {
+                imageUrlInput.value = product.imageUrls[i - 1];
+            } else if (i === 1 && product.imageUrl) {
+                imageUrlInput.value = product.imageUrl;
+            } else {
+                imageUrlInput.value = '';
+            }
+        }
+    }
+
+    // Load colors using the helper function
+    window.loadColorsIntoEditForm(product.colors || []);
+
+    // Show the modal
+    editModal.classList.remove('hidden');
+};
+
 
