@@ -15,7 +15,7 @@ const MY_FIREBASE_CONFIG = {
 };
 
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1471196459784474811/RjIbq4U6YUHzgyGV8BSN6CCYeb_9zdV4jtE5A2X0IPj0AT_dpdUfMaX22rybuTx-rZ7R';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1471608631723032669/ZoYf8HzfP0s7DPPrxOWd5NRE48O9AxJ3w-rl7rA81mM82jV2noNkhSyl2d0R_M-EVMGD';
 
 
 const sendDiscordWebhook = async (content, embeds = []) => {
