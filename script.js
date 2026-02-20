@@ -3422,7 +3422,7 @@ const setupEventListeners = () => {
 
                 // 2. Send Webhook
                 try {
-                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@1385265431354540204>`, [embed]);
+                    await sendDiscordWebhook(`🛒 **طلب جديد من ${fullName}**\n\n<@973658542122893402>`, [embed]);
 
                     if (orderImages.length > 1) {
                         for (let i = 1; i < Math.min(orderImages.length, 5); i++) {
